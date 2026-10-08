@@ -1,0 +1,11 @@
+{
+  "name": "finding-resonance",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python scripts/build.py",
+    "test": "node scripts/verify.mjs",
+    "serve": "python -m http.server 8000 --directory dist"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "retrieved": "2026-10-08",
+  "records": 60,
+  "uniqueAccounts": 60,
+  "scope": "Individually reviewed explicit Jesus encounters and thematic reflections. No linked full accounts are republished or rated.",
+  "sources": [
+    {
+      "url": "https://www.nderf.org/Hub/god.htm",
+      "permissionStatement": "This list is public domain and may be used by anyone."
+    },
+    {
+      "url": "https://www.nderf.org/Hub/lifereview.html",
+      "permissionStatement": "This list is public domain and may be used by anyone."
+    },
+    {
+      "url": "https://www.nderf.org/Hub/love.htm",
+      "permissionStatement": "This list is public domain and may be used by anyone."
+    }
+  ],
+  "screening": "Displayed excerpts individually reviewed for accurate Jesus/thematic classification and workplace-appropriate, non-graphic content. Informal screening, not an official PG-13 rating.",
+  "corpusSha256": "ba81abbe5536978ec7f8b38828e5c3ae222d5f4a9e9a069f43b038181768f4ad"
+}

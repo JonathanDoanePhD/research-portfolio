@@ -1,0 +1,15 @@
+# Model notes, v2
+
+60 editorially reviewed excerpts from distinct accounts form the complete live corpus: eight explicitly name Jesus and 52 are labeled thematic reflections. Selection is explicit and inspectable, not a classifier's assumption based on words such as God or light. Thematic connections to Jesus are editorial invitations, not statements about the contributor’s encounter. The displayed excerpts contain no graphic violence/injury, sexual content, self-harm, profanity, or frightening imagery; the review covers excerpt text only. No full external accounts are rated.
+
+TF-IDF, seeded truncated SVD (48 dimensions for this collection), and BM25 provide local retrieval. Prompt-to-theme rules add relevance signals for acceptance, hope, reflection, love, relationships, and connection. Featured-story ranking combines text scores, 0.35 per matched theme intent, and a 0.25 readability preference for excerpts of at least 30 words. One to five suggestions follow relevance ordering; candidates must be within 0.45 of the highest score. The count is fixed before session-based featured-story rotation, avoiding count changes for identical prompts. No-topic fallbacks show one excerpt. Within 0.45 of the highest score, the featured story favors unseen accounts, then those displayed least recently. Actual story views are tracked only in browser memory. Requests explicitly naming Jesus or Christ use the eight explicit accounts. These are engineering heuristics, not calibrated probabilities or learned emotional-benefit estimates. All rules are visible in discovery.mjs.
+
+The collection is too small to establish general retrieval performance. The previous 189-excerpt benchmark is retired; none of its performance claims apply to this edition. Independent human relevance and tone-fit evaluation would be necessary before making quality claims.
+
+Titles, theme labels, and selection explanations are editorial. Narratives are exact public-domain list excerpts. This system neither generates stories nor verifies their reported events. Source lists may contain other material that is more intense than this demo's curated collection.
+
+The interface uses a minimal, monochrome visual interpretation of Come Near's publicly visible site and neutral imagery. Exact corporate font files could not be verified, so system sans-serif fallbacks are used. The project is independent and contains no corporate logo.
+
+Every nonempty prompt now returns a reviewed story. All corpus candidates remain eligible even when lexical/semantic signals are weak. With no recognizable vocabulary or intent, the readability preference chooses a general starting account, with session rotation among nearby scores. The explanation describes the excerpt itself rather than claiming specific relevance to an unsupported topic.
+
+The conversation retains prompts, recommendations, and per-response variant selections in tab memory. A jump menu scrolls to earlier responses. Reloading starts an empty conversation; no prompt or history is sent to a service or stored in browser storage.
