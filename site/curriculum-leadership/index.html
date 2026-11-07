@@ -1,55 +1,233 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark"><meta name="theme-color" content="#0c283d">
-<meta name="description" content="Dr. Jonathan Doane - research-grounded curriculum strategy, educational quality systems, leadership and responsible AI research.">
-<title>Curriculum & AI Leadership | Jonathan D. Doane, Ph.D.</title>
-<style>
-:root{--bg:#091f31;--bg2:#0f3149;--panel:#123a52;--panel2:#174963;--text:#ebf7fa;--muted:#a7c8d5;--aqua:#44dce3;--lime:#bdeedc;--line:#2b6078;--amber:#f9d783}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "Segoe UI",Inter,Arial,sans-serif;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 92% 0%,#144c6d 0%,transparent 35%),radial-gradient(ellipse at 3% 52%,#12334c 0%,transparent 30%)}
-a{color:var(--aqua);text-underline-offset:4px}a:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
-.wrap{width:min(1160px,calc(100% - 48px));margin:auto}.nav{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px 0;position:relative}.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:.01em;color:var(--text);text-decoration:none}.symbol{width:34px;height:34px;border:1px solid var(--aqua);border-radius:50%;display:grid;place-items:center;color:var(--aqua);font-weight:800}.navlinks{display:flex;gap:22px;flex-wrap:wrap}.navlinks a{font-size:.79rem;text-decoration:none;text-transform:uppercase;letter-spacing:.11em;color:#bddeea;font-weight:700}.navlinks a:hover{color:white}
-.hero{min-height:630px;position:relative;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:20px;padding:80px 0 88px}
-.eyebrow{display:flex;align-items:center;gap:12px;text-transform:uppercase;color:var(--aqua);font-size:.76rem;letter-spacing:.16em;font-weight:800}.eyebrow:before{content:"";width:4px;height:24px;background:var(--aqua);border-radius:2px}
-h1,h2,h3,p{margin-top:0}h1{font-size:clamp(3.5rem,6vw,5.75rem);line-height:1.05;letter-spacing:-.055em;margin:30px 0 24px;max-width:780px;font-weight:820}h1 em{font-style:normal;color:var(--aqua)}.hero p{font-size:1.26rem;line-height:1.65;color:var(--muted);max-width:655px}
-.actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:12px 20px;text-decoration:none;font-size:.91rem;font-weight:750;color:var(--text);background:#153d54;transition:transform .2s,background .2s}.btn:hover{transform:translateY(-2px);background:#1a536b}.btn.primary{background:var(--aqua);border-color:var(--aqua);color:#062637}
-.orbit{position:relative;width:min(440px,100%);aspect-ratio:1;margin:auto}.orbit svg{width:100%;height:100%;filter:drop-shadow(0 14px 35px #021526)}.orbit .halo{position:absolute;border-radius:50%;border:1px solid #3f99b255;inset:12%;animation:pulse 9s ease-in-out infinite alternate}.orbit .halo.two{inset:26%;animation-delay:-3s}
-@keyframes pulse{to{transform:rotate(13deg) scale(1.04);opacity:.6}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:-15px auto 64px;position:relative}.stat{padding:22px;border:1px solid #286078;background:linear-gradient(145deg,#15445b,#102f47);border-radius:16px;box-shadow:0 20px 40px #03182955}.stat strong{display:block;color:var(--aqua);font-size:2.6rem;line-height:1.1;letter-spacing:-.035em}.stat span{display:block;margin-top:8px;font-size:.89rem;color:var(--muted)}
-section{scroll-margin-top:28px;padding:65px 0 70px;border-top:1px solid #27526a}.section-top{display:flex;gap:26px;justify-content:space-between;align-items:flex-end;margin-bottom:34px}.kicker{font-size:.75rem;font-weight:800;color:var(--aqua);letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-h2{font-size:clamp(2.1rem,4vw,3.4rem);letter-spacing:-.038em;line-height:1.14;margin-bottom:14px}h3{font-size:1.25rem;line-height:1.28;letter-spacing:-.01em}.intro{max-width:720px;color:var(--muted);font-size:1.08rem}.grid{display:grid;gap:16px}.four{grid-template-columns:repeat(4,1fr)}.three{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:repeat(2,1fr)}
-.panel{border:1px solid #2b647e;background:linear-gradient(155deg,#153e57,#103149);padding:27px;border-radius:18px;min-height:220px}.panel p{color:var(--muted);font-size:.93rem;margin:9px 0 0}.number{font-size:.82rem;font-weight:800;color:var(--aqua);letter-spacing:.15em;margin-bottom:21px}.panel h3{margin-bottom:0}
-.path{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;margin:34px 0}.step{min-height:195px;border-radius:15px;background:#16475e;border:1px solid #2e7287;padding:23px}.step .small{display:block;color:var(--aqua);font-size:.72rem;font-weight:800;letter-spacing:.13em;margin-bottom:18px}.step strong{display:block;font-size:1.12rem}.step p{color:var(--muted);font-size:.89rem;margin:8px 0}.notice{border-left:3px solid var(--aqua);background:#17465c;border-radius:0 10px 10px 0;padding:16px 20px;color:#d9f0f4;margin:23px 0}.tagline{padding:32px;border-radius:16px;background:#174a64;border:1px solid #36748d;font-size:1.35rem;font-weight:730;line-height:1.4}
-.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.flow .step{min-height:165px;padding:17px}.flow .step strong{font-size:.96rem}.flow .step p{font-size:.8rem}
-.care{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.care .letter{font-size:3.4rem;color:var(--aqua);line-height:1;font-weight:840}
-.evidence{display:grid;grid-template-columns:1fr 1fr;gap:18px}.case{position:relative;overflow:hidden;background:#143a52;border:1px solid #2a6881;border-radius:18px;padding:30px;min-height:350px}.case.feature{grid-column:span 2;display:grid;grid-template-columns:1fr .8fr;gap:34px;align-items:center;background:linear-gradient(110deg,#184b63,#10334a)}.case .eyelabel{font-weight:790;letter-spacing:.13em;font-size:.75rem;text-transform:uppercase;color:var(--aqua);margin-bottom:18px}.case h3{font-size:1.6rem;margin-bottom:15px}.case p{color:#b5d2df}.case a{font-weight:700}.gigantic{font-size:clamp(6rem,12vw,11rem);line-height:.9;letter-spacing:-.08em;color:var(--aqua);font-weight:850;opacity:.92;text-align:center}
-.mini{font-size:.79rem;color:#a1bfce}.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.roadmap .panel{min-height:250px}.roadmap .time{font-size:2rem;color:var(--aqua);font-weight:800}
-.fineprint{color:#93b4c5;font-size:.8rem;margin-top:24px}.foot{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;padding:40px 0 60px;border-top:1px solid #29556d}.foot strong{font-size:1.25rem}.foot p{color:var(--muted);max-width:650px}
-@media(max-width:900px){.hero{grid-template-columns:1fr;min-height:unset;padding:52px 0}.orbit{max-width:320px;opacity:.8}.four,.care{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:repeat(3,1fr)}.case.feature{grid-template-columns:1fr}.navlinks{gap:12px}}
-@media(max-width:600px){.wrap{width:min(100% - 32px,1160px)}.nav{flex-direction:column;align-items:flex-start}.navlinks{gap:12px}.navlinks a{font-size:.7rem}.stats,.two,.three,.four,.care,.path,.flow,.roadmap,.evidence{grid-template-columns:1fr}.case.feature{grid-column:span 1}.section-top{display:block}.hero{padding:36px 0 50px}h1{font-size:3.4rem}.orbit{display:none}.panel{min-height:unset}.stats{margin-bottom:40px}section{padding:50px 0}.gigantic{font-size:5rem}}
-@media print{body{background:white;color:#102c3f;font-size:11px}.nav,.actions,.orbit{display:none}.hero{min-height:unset;display:block}.hero p,.intro,.panel p,.case p{color:#324e5e}.panel,.case,.step,.stat{background:white;color:#10314a;border-color:#abcbd1;box-shadow:none}.stat strong,.case h3,.number,h1 em{color:#087482}section{padding:25px 0;break-inside:avoid}.grid,.evidence{break-inside:avoid}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7fafc">
+  <meta name="description" content="Jonathan D. Doane, Ph.D. - curriculum and instructional leadership, learning sciences, quality and fidelity, standards alignment, and applied educational AI.">
+  <meta property="og:title" content="Curriculum & Instruction | Jonathan D. Doane, Ph.D.">
+  <meta property="og:description" content="Turning educational research into curriculum, consistent quality, and better support for instructors and learners.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jonathandoanephd.github.io/research-portfolio/curriculum-leadership/">
+  <meta property="og:image" content="https://raw.githubusercontent.com/JonathanDoanePhD/research-portfolio/main/site/assets/fox-observer-orange.png">
+  <link rel="icon" type="image/png" sizes="any" href="../assets/fox-head-orange.png">
+  <link rel="apple-touch-icon" href="../assets/fox-head-orange.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Curriculum & Instruction | Jonathan D. Doane, Ph.D.</title>
+  <style>
+    :root{color-scheme:light;--paper:#f7fafc;--white:#fff;--ink:#263b47;--navy:#17445f;--blue:#006eb1;--light:#e9f4fa;--line:#d1e1e8;--muted:#506977;--orange:#cf7138}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.7 "Inter",Arial,sans-serif}
+    a{color:var(--blue);text-underline-offset:4px}
+    a:hover{color:#004a81}
+    a:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+    h1,h2,h3,p{margin-top:0}
+    h1,h2,h3{line-height:1.2;letter-spacing:-.045em}
+    h1{font-size:clamp(2.5rem,4.6vw,4.55rem);letter-spacing:-.065em;max-width:780px;margin:15px 0 24px}
+    h2{font-size:clamp(1.95rem,3vw,2.85rem);margin:10px 0 18px}
+    h3{font-size:1.19rem;margin:0 0 12px}
+    p{margin-bottom:17px}
+    .shell{width:min(1170px,calc(100% - 52px));margin:auto}
+    .skip{position:absolute;top:-100px;left:15px;padding:12px;background:#fff;z-index:100}
+    .skip:focus{top:12px}
+    .top{background:#fff;border-bottom:1px solid var(--line)}
+    .top-inner{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:14px 0}
+    .identity{display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none;font-weight:800;letter-spacing:-.045em;font-size:1.05rem;white-space:nowrap}
+    .identity img{width:40px;height:40px;object-fit:contain}
+    .nav{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+    .nav a{font-weight:600;color:#526b79;text-decoration:none;font-size:.85rem}
+    .nav a:hover{color:var(--blue)}
+    .nav .nav-back{border-left:1px solid var(--line);padding-left:19px;color:var(--blue)}
+    .eyebrow{display:block;text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;color:var(--blue);font-weight:800}
+    .hero{border-bottom:1px solid var(--line);background:#f0f7fb}
+    .hero-inner{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,.8fr);gap:40px;align-items:center;min-height:500px;padding:82px 0 73px}
+    .hero p{max-width:690px;color:var(--muted);font-size:1.13rem}
+    .hero .hero-details{font-size:.96rem;color:#456475;margin-top:20px}
+    .hero-art{display:flex;align-items:end;justify-content:center;align-self:stretch;min-height:290px}
+    .hero-art img{width:min(100%,360px);max-height:375px;object-fit:contain;object-position:center bottom}
+    .cta{display:inline-block;text-decoration:none;background:var(--blue);border:1px solid var(--blue);border-radius:3px;color:#fff;font-size:.9rem;font-weight:700;padding:11px 17px;margin:0 12px 10px 0}
+    .cta:hover{background:#00548c;color:#fff}
+    .cta.ghost{background:transparent;color:var(--blue)}
+    .cta.ghost:hover{background:#e2f0f7}
+    .section{padding:76px 0;border-bottom:1px solid var(--line);scroll-margin-top:20px}
+    .section.white{background:var(--white)}
+    .lead{font-size:1.08rem;color:var(--muted);max-width:805px;line-height:1.75}
+    .heading-row{display:grid;grid-template-columns:1fr auto;align-items:end;gap:25px}
+    .section-fox{width:178px;max-height:150px;object-fit:contain;object-position:center bottom}
+    .intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+    .primer{background:#fff;border:1px solid var(--line);padding:25px 27px}
+    .primer strong{display:block;color:var(--blue);font-size:.8rem;letter-spacing:.07em;margin-bottom:8px}
+    .primer p{color:var(--muted);font-size:.94rem;margin-bottom:0}
+    .theory-top{margin-bottom:27px}
+    .table-scroll{width:100%;overflow-x:auto;border:1px solid var(--line);background:#fff}
+    table{width:100%;border-collapse:collapse;table-layout:fixed;text-align:left;font-size:.91rem;line-height:1.6}
+    th,td{vertical-align:top;padding:19px 21px;border-bottom:1px solid var(--line)}
+    thead th{background:var(--navy);color:#fff;font-weight:700;letter-spacing:.015em}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:nth-child(even){background:#f4f9fc}
+    tbody th{font-weight:750;color:#173f56}
+    td{color:#465e6b}
+    td strong{color:var(--ink);font-weight:700}
+    .label{display:block;text-transform:uppercase;letter-spacing:.09em;font-size:.68rem;color:var(--blue);font-weight:800;margin-bottom:5px}
+    .theory th:nth-child(1){width:22%}.theory th:nth-child(2){width:33%}.theory th:nth-child(3){width:45%}
+    .tiny{font-size:.81rem;color:#607784;line-height:1.6}
+    .rule{width:52px;height:3px;background:var(--blue);margin:20px 0 25px}
+    .process{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:30px;border:1px solid var(--line)}
+    .process article{padding:24px 18px;border-right:1px solid var(--line);background:#fff}
+    .process article:last-child{border-right:0}
+    .stepnum{display:block;font-size:.78rem;font-weight:800;color:var(--orange);margin-bottom:14px}
+    .process h3{font-size:1rem}
+    .process p{font-size:.85rem;color:var(--muted);margin:0}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:38px;margin-top:34px}
+    .lined{border-top:2px solid var(--blue);padding-top:22px}
+    .lined p,.lined li{color:var(--muted)}
+    .lined ul{padding-left:20px}
+    .standards th:nth-child(1){width:16%}.standards th:nth-child(2){width:32%}.standards th:nth-child(3){width:52%}
+    .standards a{font-weight:700}
+    .note{border-left:3px solid var(--blue);padding:15px 22px;background:#edf5fa;color:#385568;margin:25px 0;font-size:.94rem}
+    .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:30px 0 35px}
+    .metric{border-top:2px solid var(--blue);padding:18px 0}
+    .metric strong{display:block;font-size:2.3rem;letter-spacing:-.065em;line-height:1.15;color:var(--blue)}
+    .metric span{color:var(--muted);font-size:.83rem}
+    .studies{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .study{background:#fff;border:1px solid var(--line);padding:28px;min-height:252px}
+    .study .index{display:block;color:var(--blue);font-size:.75rem;font-weight:800;letter-spacing:.1em;margin-bottom:15px}
+    .study p{font-size:.93rem;color:var(--muted)}
+    .study a{font-weight:700;font-size:.88rem}
+    .care{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:25px}
+    .care article{border-top:3px solid var(--orange);padding:16px 0}
+    .care .bigletter{font-weight:800;font-size:2rem;color:var(--navy);line-height:1.3}
+    .care p{color:var(--muted);font-size:.88rem}
+    .bottom{background:var(--navy);color:#fff}
+    .bottom-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:62px 0 40px}
+    .bottom h2{max-width:680px;margin-bottom:17px}
+    .bottom p{color:#d9e9f0;max-width:700px}
+    .bottom a{color:#fff;font-weight:700}
+    .bottom .footer-fox{width:155px;height:auto}
+    .footer-end{border-top:1px solid #4a7790;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;padding:21px 0 27px;color:#d6e6ed;font-size:.78rem}
+    .footer-end a{font-size:.78rem}
+    @media(max-width:970px){.hero-inner{grid-template-columns:1fr 260px}.nav{gap:12px}.process{grid-template-columns:repeat(3,1fr)}.process article:nth-child(3){border-right:0}.process article:nth-child(n+4){border-top:1px solid var(--line)}}
+    @media(max-width:720px){.shell{width:min(100% - 32px,1170px)}.top-inner{align-items:flex-start;flex-direction:column;gap:10px}.nav{gap:14px}.nav a{font-size:.79rem}.nav .nav-back{padding-left:12px}.hero-inner{display:flex;flex-direction:column;padding:56px 0 30px;min-height:auto;gap:0}.hero-art{width:100%;min-height:0;height:170px;justify-content:end}.hero-art img{max-height:196px;width:200px}.section{padding:54px 0}.intro-grid,.two-col,.studies{grid-template-columns:1fr}.metric-grid,.care{grid-template-columns:repeat(2,1fr)}.process{grid-template-columns:1fr}.process article,.process article:nth-child(3){border-right:0;border-bottom:1px solid var(--line)}.process article:last-child{border-bottom:0}.process article:nth-child(n+4){border-top:0}.table-scroll table{min-width:730px}.section-fox{width:125px}.bottom-inner{align-items:flex-end}.bottom .footer-fox{width:90px}}
+    @media(max-width:420px){.heading-row{display:block}.section-fox{display:none}.bottom .footer-fox{display:none}.metric-grid,.care{grid-template-columns:1fr}h1{font-size:2.55rem}.hero-art{height:140px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{body{background:#fff;font-size:11px}.top,.cta,.hero-art,.section-fox,.footer-fox{display:none}.hero-inner,.section{padding:25px 0;min-height:auto}.table-scroll{overflow:visible}table{font-size:10px}.process,.studies,.intro-grid{break-inside:avoid}.bottom{background:#17445f!important;print-color-adjust:exact}}
+  </style>
 </head>
 <body>
-<div class="wrap">
-<nav class="nav" aria-label="Primary"><a class="brand" href="#top"><span class="symbol">JD</span> Jonathan D. Doane, Ph.D.</a><div class="navlinks"><a href="#framework">Framework</a><a href="#quality">Quality</a><a href="#leadership">Leadership</a><a href="#research">AI Research</a><a href="#vision">Vision</a><a href="#contact">Connect</a></div></nav>
-<header class="hero" id="top"><div><div class="eyebrow">Curriculum strategy / learning science / responsible AI</div><h1>Design for <em>wonder.</em><br>Engineer for learning.</h1><p>I lead educational teams to turn research-backed pedagogy into engaging, measurable and repeatable learner experiences - without losing the expertise, judgment or individuality of the people who make them.</p><div class="actions"><a class="btn primary" href="#framework">Explore the framework →</a><a class="btn" href="#research">See selected research</a><a class="btn" href="https://ai-4-all.org/how-we-keep-ignite-at-the-cutting-edge-of-ai-education/" target="_blank" rel="noopener">Read published work ↗</a></div></div><div class="orbit" aria-hidden="true"><div class="halo"></div><div class="halo two"></div><svg viewBox="0 0 450 450" fill="none"><g stroke="#8ce5f4" stroke-width="1.1" opacity=".77"><path d="M85 158L195 48 350 96 400 226 287 387 130 354 58 258Z"/><path d="M85 158L350 96 287 387 85 158 400 226 195 48 130 354 350 96"/><path d="M58 258L195 48 287 387 130 354 400 226 85 158"/><path d="M195 48L130 354M350 96L58 258M287 387L195 48"/></g><g fill="#a7eff6"><circle cx="85" cy="158" r="4"/><circle cx="195" cy="48" r="3"/><circle cx="350" cy="96" r="4"/><circle cx="400" cy="226" r="4"/><circle cx="287" cy="387" r="4"/><circle cx="130" cy="354" r="4"/><circle cx="58" cy="258" r="4"/></g><circle cx="230" cy="225" r="165" stroke="#65d8e1" opacity=".13"/></svg></div></header>
-<div class="stats" aria-label="Selected evidence"><div class="stat"><strong>188</strong><span>AI/ML projects in an evidence-grounded research atlas</span></div><div class="stat"><strong>4,044</strong><span>Project-source quotations verified verbatim</span></div><div class="stat"><strong>38%</strong><span>Reduction in measured AI content errors in HLC evaluation</span></div><div class="stat"><strong>1,000+</strong><span>Handwritten math work samples analyzed for misconceptions</span></div></div>
-<section id="framework"><div class="section-top"><div><div class="kicker">01 / Framework stewardship</div><h2>A curriculum operating system.</h2><p class="intro">A shared instructional contract should protect the quality of learning while leaving subject specialists free to make wise, discipline-specific choices. This model distills my prior framework and instructional design work into a public, non-proprietary synthesis.</p></div></div><div class="grid four"><div class="panel"><div class="number">01 / INTENT</div><h3>Understanding by Design</h3><p>Start with standards, transfer, essential questions and legitimate evidence. Design lessons backward from what learners should understand and be able to do.</p></div><div class="panel"><div class="number">02 / EXPERIENCE</div><h3>5E and active inquiry</h3><p>Engage, Explore, Explain, Elaborate and Evaluate, combined with purposeful scaffolding, gradual release and project-based application where appropriate.</p></div><div class="panel"><div class="number">03 / ACCESS</div><h3>UDL and belonging</h3><p>Reduce unnecessary barriers through flexible representations, accessible content, purposeful language, culturally responsive examples and varied support.</p></div><div class="panel"><div class="number">04 / EVIDENCE</div><h3>Authentic assessment</h3><p>Connect formative checks, rich performance tasks, rubrics and feedback to the intended understanding, not merely content exposure or time on platform.</p></div></div><div class="notice">Different subjects do not need identical lesson choreography. They do need a shared commitment to rigor, accessibility, conceptual coherence and meaningful evidence.</div></section>
-<section id="impact"><div class="kicker">02 / Public-facing logic of impact</div><h2>Make the pathway testable.</h2><p class="intro">A simplified theory of learning impact, intentionally excluding AI4ALL's internal goals, maps, organizational assumptions and implementation details.</p><div class="path"><div class="step"><span class="small">NEED</span><strong>Understand the learner</strong><p>Starting points, prior experience, strengths, constraints and barriers.</p></div><div class="step"><span class="small">DESIGN</span><strong>Build the experience</strong><p>Engage, practice, discuss, receive feedback and transfer.</p></div><div class="step"><span class="small">EVIDENCE</span><strong>See the learning</strong><p>Authentic work, checks for understanding, instructor observations.</p></div><div class="step"><span class="small">IMPROVE</span><strong>Close the loop</strong><p>Find patterns, examine alternatives, pilot revisions and assess again.</p></div></div><div class="tagline">A theory of change is a hypothesis about how learning improves. Program outcomes tell us where to investigate; they do not automatically prove causality.</div></section>
-<section id="quality"><div class="kicker">03 / Quality, fidelity and vocabulary</div><h2>Quality is an operating discipline.</h2><p class="intro">The difference between a good framework and a great student experience is implementation fidelity, clear roles and a consistent authoring language.</p><div class="flow"><div class="step"><span class="small">1 / BRIEF</span><strong>Align</strong><p>Standards, objectives, learner needs, evidence, target vocabulary.</p></div><div class="step"><span class="small">2 / DESIGN</span><strong>Structure</strong><p>Authentic problem, active learning, practice, assessment plan.</p></div><div class="step"><span class="small">3 / AUTHOR</span><strong>Create</strong><p>SME review, language consistency, visuals, purposeful media.</p></div><div class="step"><span class="small">4 / VERIFY</span><strong>Validate</strong><p>Accuracy, standards mapping, accessibility, rubric integrity.</p></div><div class="step"><span class="small">5 / IMPROVE</span><strong>Learn</strong><p>Instructor feedback, learner signals, versioning and correction.</p></div></div><div class="grid two" style="margin-top:22px"><div class="panel"><div class="number">A LIVING LANGUAGE SYSTEM</div><h3>Purposeful vocabulary</h3><p>My work includes an organizational curriculum dictionary and a technical terminology audit. The transferable practice: define terms at the right time, use consistent language and acronyms, and protect conceptual continuity as courses evolve.</p></div><div class="panel"><div class="number">FIDELITY WITHOUT RIGIDITY</div><h3>Shared commitments, informed variation</h3><p>Fidelity means maintaining the learning mechanisms and quality standards through authoring, production, platform delivery and assessment. Expert-justified subject adaptations can preserve fidelity rather than undermine it.</p></div></div></section>
-<section id="leadership"><div class="kicker">04 / Leadership</div><h2>Lead managers. Amplify expertise.</h2><p class="intro">I have led distributed instructional teams, coordinated across educational and technical functions, and used coaching to create clarity without replacing professional judgment. My CARE approach provides a memorable leadership vocabulary.</p><div class="care"><div class="panel"><div class="letter">C</div><h3>Commit</h3><p>Make learner promises, priorities, roles and accountability unmistakable.</p></div><div class="panel"><div class="letter">A</div><h3>Advocate</h3><p>Remove barriers, protect standards and elevate instructor and SME insights.</p></div><div class="panel"><div class="letter">R</div><h3>Respect</h3><p>Invite thoughtful disagreement, honor discipline expertise and give direct feedback.</p></div><div class="panel"><div class="letter">E</div><h3>Empower</h3><p>Coach leaders to make decisions, develop their teams and own delivery.</p></div></div><div class="notice">Cross-functional partnerships: curriculum management, assessment, teaching, product, engineering, data science, quality assurance, creative production and executive leadership.</div></section>
-<section id="research"><div class="kicker">05 / Selected educational AI research</div><h2>Evidence first. Human judgment always.</h2><div class="evidence"><article class="case feature"><div><div class="eyelabel">Featured / project intelligence</div><h3>AI Project Intelligence Library</h3><p>An atlas connecting the algorithms, sectors, datasets, technical sophistication and reproducibility of 188 student AI/ML projects. Public methods include validated evidence excerpts, blind second coding, explicit study limitations and privacy-by-design separation of student artifacts from public code.</p><a href="https://github.com/JonathanDoanePhD/AI_Project_Intelligence_Library" target="_blank" rel="noopener">Explore methodology and repository ↗</a></div><div class="gigantic" aria-label="188 projects">188</div></article>
-<article class="case"><div class="eyelabel">Evaluation / rubric alignment</div><h3>Rubric-calibrated AI assessment</h3><p>Research into how machine-generated ratings compare with human scores by criterion. The approach separates rubric interpretation, program-specific human calibration, agreement analysis and cases needing a trained reviewer. It is not presented as proven high-stakes autonomous grading.</p><span class="mini">Research summary / detailed internal artifacts not released</span></article>
-<article class="case"><div class="eyelabel">Predictive modeling / student equity</div><h3>Responsible admissions review research</h3><p>Historical application-essay model work evaluated on 683 records (137 held-out). An archived score export reported 80.29% accuracy and 56.25% precision among 16 highest-risk cases. Designed to inform human capacity review, not decide admission. Reproducibility limitations are documented.</p><a href="https://github.com/JonathanDoanePhD/application-essay-retraction-model" target="_blank" rel="noopener">Read audited research notes ↗</a></article>
-<article class="case"><div class="eyelabel">Instructional feedback / EdLight</div><h3>Handwritten math to teacher insight</h3><p>Analyzed over 1,000 student work samples to identify mathematical misconception patterns for AI-supported teacher feedback. A related batch-review workflow reduced manual review time by about 65%.</p><span class="mini">Work summary / not a claim of autonomous pedagogical diagnosis</span></article>
-<article class="case"><div class="eyelabel">Published leadership perspective</div><h3>AI education that protects critical thinking</h3><p>Coauthored AI4ALL's 2026 article on curricular modernization, flipped learning, project readiness, responsible AI, UDL and supporting students to evaluate tools rather than surrender their reasoning to them.</p><a href="https://ai-4-all.org/how-we-keep-ignite-at-the-cutting-edge-of-ai-education/" target="_blank" rel="noopener">Read the published article ↗</a></article></div>
-<p class="fineprint">Research measures refer to distinct projects, datasets and evaluation procedures. They are not causal estimates of learning gains. Student data, private source files and proprietary AI4ALL protocols are deliberately omitted.</p></section>
-<section id="vision"><div class="kicker">06 / Applying the approach to video-first K-12 learning</div><h2>Cinematic wonder. Durable understanding.</h2><p class="intro">Video, personalization and AI can create captivating entry points. The underlying content still needs an explicit construct, authentic practice, accessible support, transparent assessment and educator agency.</p><div class="grid two"><div class="panel"><div class="number">MEMORABLE</div><h3>Videos explain; students make meaning.</h3><p>Use storytelling for attention, motivation and conceptual entry. Build opportunities to explain, test, transfer and revise beyond the screen.</p></div><div class="panel"><div class="number">COHERENT</div><h3>Consistency where it counts.</h3><p>Ensure standards, essential questions, narrative, practice, rubric and feedback reinforce the same learning goal across courses.</p></div><div class="panel"><div class="number">ADAPTIVE</div><h3>Personalize the context, protect the skill.</h3><p>Adapt examples and scaffolds without quietly changing the assessed construct. Monitor appropriateness and unintended variation.</p></div><div class="panel"><div class="number">HUMAN</div><h3>AI amplifies educator expertise.</h3><p>Use assistants to reduce avoidable work and improve insight, with clear review paths for consequential decisions and exceptions.</p></div></div>
-<h3 style="margin-top:46px;margin-bottom:19px">An illustrative first 90 days</h3><div class="roadmap"><div class="panel"><div class="time">01–30</div><h3>Listen and diagnose</h3><p>Study exemplar courses, meet subject managers and cross-functional partners, identify quality bottlenecks, learn current rubrics, standards obligations and data signals.</p></div><div class="panel"><div class="time">31–60</div><h3>Co-design and pilot</h3><p>Agree on essential norms and exception rules, test a lightweight quality rubric across representative disciplines, calibrate reviewers and evaluate friction.</p></div><div class="panel"><div class="time">61–90</div><h3>Scale what works</h3><p>Clarify decision rights, streamline handoffs, set measurable release gates, and propose a prioritized improvement roadmap with owners and cadence.</p></div></div><p class="fineprint">Illustrative proposal, not a claim about current internal operations at any prospective employer.</p></section>
-<section id="contact"><div class="kicker">Let's build</div><h2>Make learning unforgettable.<br><span style="color:var(--aqua)">Make quality repeatable.</span></h2><p class="intro">I bring mathematics research, curriculum strategy, distributed instructional leadership, hands-on AI engineering and a deep commitment to helping educators and learners thrive.</p><div class="actions"><a class="btn primary" href="mailto:JonathanDoanePhD@gmail.com">Email Jonathan ↗</a><a class="btn" href="https://www.linkedin.com/in/JonathanDoanePhD/" target="_blank" rel="noopener">LinkedIn ↗</a><a class="btn" href="https://github.com/JonathanDoanePhD" target="_blank" rel="noopener">GitHub ↗</a><a class="btn" href="https://jonathandoanephd.github.io/research-portfolio/" target="_blank" rel="noopener">Full research portfolio ↗</a></div></section>
-<footer class="foot"><div><strong>Jonathan D. Doane, Ph.D.</strong><p>Curriculum leadership, learning sciences and responsible AI.</p></div><div><p class="mini">Designed as an external-facing professional portfolio. All descriptions are high-level, original summaries. Internal educational frameworks, proprietary operating details and identifiable student records are not reproduced. © 2026 Jonathan D. Doane.</p></div></footer>
-</div>
-</body></html>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="shell top-inner">
+  <a class="identity" href="../" aria-label="Jonathan Doane research portfolio home"><img src="../assets/fox-head-orange.png" alt="" width="40" height="40"><span>Jonathan Doane</span></a>
+  <nav class="nav" aria-label="Curriculum page navigation">
+    <a href="#framework">Learning science</a><a href="#standards">Standards</a><a href="#quality">Quality</a><a href="#research">Research</a><a href="#leadership">Leadership</a><a class="nav-back" href="../">← Research portfolio</a>
+  </nav>
+</div></header>
+<main id="main">
+<section class="hero"><div class="shell hero-inner"><div>
+  <span class="eyebrow">Curriculum & Instruction / Selected Work</span>
+  <h1>Strong curriculum takes more than a great lesson.</h1>
+  <div class="rule"></div>
+  <p>I'm a mathematician, educator, and curriculum leader. I enjoy taking research about how people learn and turning it into lessons, tools, and systems that make sense to instructors and students alike.</p>
+  <p>My work brings together K-12 mathematics, national AI education, curriculum development, team leadership, and practical AI research. I'm especially interested in what it takes to deliver a consistently strong learning experience at scale.</p>
+  <div><a class="cta" href="#framework">See my framework</a><a class="cta ghost" href="#research">Explore the research</a></div>
+  <p class="hero-details">Dr. Jonathan D. Doane · Ph.D., Mathematical Sciences · Curriculum & instructional leadership</p>
+</div><div class="hero-art"><img src="../assets/fox-observer-orange.png" alt="An orange fox, the recurring character from my research portfolio" width="360" height="375"></div></div></section>
+
+<section class="section white" id="framework"><div class="shell">
+  <div class="heading-row"><div><span class="eyebrow">01 / The research behind the design</span><h2>Learning theory, organized for use.</h2><p class="lead">Research gives me a way to make decisions, not just a collection of names to cite. Here's how I organize the theories and frameworks I draw from when thinking about curriculum, instruction, and assessment.</p></div><img class="section-fox" src="../assets/fox-paw-orange.png" alt="" width="178" height="150" loading="lazy"></div>
+  <div class="table-scroll theory-top"><table class="theory">
+    <caption class="tiny" style="caption-side:bottom;text-align:left;padding:12px 20px">These are connected traditions, not interchangeable theories. The examples illustrate how I apply their central ideas; they are not a claim that any one framework explains all of learning.</caption>
+    <thead><tr><th scope="col">Area of practice</th><th scope="col">Researchers & frameworks</th><th scope="col">How it informs my curriculum work</th></tr></thead>
+    <tbody>
+      <tr><th scope="row"><span class="label">01 / Intent</span>Backward design & cognitive demand</th><td><strong>Wiggins & McTighe</strong> (Understanding by Design), <strong>Bloom</strong> (and the revised taxonomy), <strong>Webb</strong> (Depth of Knowledge)</td><td>Start with what learners should understand and do. Align essential questions, standards, learning activities and assessment. Look at the thinking a task actually requires, not just the verb used in the prompt.</td></tr>
+      <tr><th scope="row"><span class="label">02 / Inquiry</span>Constructivism & active learning</th><td><strong>Dewey</strong> (experience), <strong>Piaget</strong> (cognitive development), <strong>Bruner</strong> (discovery and scaffolding), <strong>Bybee</strong> (5E instructional model)</td><td>Give students worthwhile problems, time to explore, explanations they can test, and opportunities to apply what they have learned. The 5E model is particularly useful for designing an inquiry sequence.</td></tr>
+      <tr><th scope="row"><span class="label">03 / Community</span>Social learning & instructional support</th><td><strong>Vygotsky</strong> (zone of proximal development), <strong>Bandura</strong> (social learning), <strong>Garrison, Anderson & Archer</strong> (Community of Inquiry)</td><td>Use instructor guidance, worked collaboration, discussion and timely feedback. Build the kind of learning community in which students feel comfortable taking intellectual risks.</td></tr>
+      <tr><th scope="row"><span class="label">04 / Clarity</span>Explicit instruction & cognitive load</th><td><strong>Rosenshine</strong> (Principles of Instruction), <strong>Sweller</strong> (Cognitive Load Theory), <strong>Gagné</strong> (Nine Events of Instruction)</td><td>Sequence complexity carefully, use worked examples when they help, and remove avoidable confusion. Balance clear explanations with opportunities for independent thinking.</td></tr>
+      <tr><th scope="row"><span class="label">05 / Evidence</span>Formative assessment & feedback</th><td><strong>Black & Wiliam</strong> (assessment for learning), <strong>Hattie</strong> (visible learning and feedback), <strong>Marzano</strong> (instructional strategies and classroom practice)</td><td>Build checks for understanding into the learning, not just the end of it. Make feedback useful to instructors and students, and review what assessment patterns tell us about a lesson.</td></tr>
+      <tr><th scope="row"><span class="label">06 / Access</span>Inclusive & differentiated learning</th><td><strong>CAST</strong> (Universal Design for Learning), <strong>Tomlinson</strong> (differentiation), <strong>Ladson-Billings</strong> (culturally relevant pedagogy)</td><td>Plan for different starting points, representations and means of participation. Keep the learning goal rigorous while reducing barriers that are not part of the skill being taught.</td></tr>
+      <tr><th scope="row"><span class="label">07 / Motivation</span>Engagement, reinforcement & agency</th><td><strong>Skinner</strong> (behavioral reinforcement), <strong>Deci & Ryan</strong> (Self-Determination Theory), <strong>Dweck</strong> (mindset research)</td><td>Be intentional about recognition, relationships and student ownership. My classroom participation work, in particular, made me pay close attention to whose voices are being heard and what helps more students participate.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="intro-grid">
+    <article class="primer"><strong>START WITH THE END</strong><h3>Understanding by Design</h3><p>Desired results, acceptable evidence, then the learning experience. That's the organizing logic I return to when a lesson feels busy but its purpose isn't clear.</p></article>
+    <article class="primer"><strong>MAKE SPACE FOR THINKING</strong><h3>The 5E learning cycle</h3><p>Engage, Explore, Explain, Elaborate, Evaluate. This supports the shift from passively watching or listening to actively working with ideas.</p></article>
+    <article class="primer"><strong>PLAN FOR THE ACTUAL LEARNER</strong><h3>Universal Design for Learning</h3><p>Accessible materials, thoughtful scaffolds and meaningful choices matter from the beginning of design, not just at final review.</p></article>
+  </div>
+</div></section>
+
+<section class="section" id="standards"><div class="shell">
+  <span class="eyebrow">02 / Standards & curricular coherence</span>
+  <h2>One coherent experience. Different state requirements.</h2>
+  <p class="lead">I've worked with New York mathematics standards as a classroom teacher and with nationwide K-12 mathematics content at Huntington Learning Center. Those experiences taught me that consistency is not the same thing as giving every state an identical course. You need a repeatable way to document and manage the differences.</p>
+  <div class="process" aria-label="Standards-alignment workflow">
+    <article><span class="stepnum">STEP 01</span><h3>Find the right standard</h3><p>Confirm the state, subject, grade, course and current version.</p></article>
+    <article><span class="stepnum">STEP 02</span><h3>Map the intent</h3><p>Record the skill, prerequisite knowledge and expected depth.</p></article>
+    <article><span class="stepnum">STEP 03</span><h3>Design evidence</h3><p>Align practice and assessment with the actual learning requirement.</p></article>
+    <article><span class="stepnum">STEP 04</span><h3>Review differences</h3><p>Preserve state-specific wording, sequences and requirements.</p></article>
+    <article><span class="stepnum">STEP 05</span><h3>Maintain the crosswalk</h3><p>Track ownership, sources, decisions and revisions.</p></article>
+  </div>
+  <h3 style="margin-top:37px">What state-by-state review looks like</h3>
+  <p class="tiny">Illustrative official mathematics frameworks to check when designing a multi-state content system. This is a reference table, not a claim that I personally authored a crosswalk for each of these states.</p>
+  <div class="table-scroll"><table class="standards">
+    <thead><tr><th scope="col">State</th><th scope="col">Framework</th><th scope="col">What the team needs to verify</th></tr></thead><tbody>
+      <tr><th scope="row">New York</th><td><a href="https://www.nysed.gov/standards-instruction/mathematics" target="_blank" rel="noopener">Next Generation Mathematics Learning Standards ↗</a></td><td>Grade-level expectations, course sequence, assessment alignment and current NYSED implementation guidance.</td></tr>
+      <tr><th scope="row">Texas</th><td><a href="https://tea.texas.gov/curriculum-and-instruction/texas-essential-knowledge-and-skills-teks" target="_blank" rel="noopener">Texas Essential Knowledge and Skills (TEKS) ↗</a></td><td>Course-specific TEKS, required content, state terminology and standards amendments.</td></tr>
+      <tr><th scope="row">California</th><td><a href="https://www.cde.ca.gov/be/st/ss/mathstandard.asp" target="_blank" rel="noopener">California Common Core State Standards: Mathematics ↗</a></td><td>CA standards, standards for mathematical practice, course-level organization and state guidance.</td></tr>
+      <tr><th scope="row">Florida</th><td><a href="https://www.fldoe.org/academics/standards/subject-areas/math-science/mathematics/" target="_blank" rel="noopener">B.E.S.T. Standards for Mathematics ↗</a></td><td>Current benchmarks, mathematical thinking and reasoning standards, and revisions to state rules.</td></tr>
+      <tr><th scope="row">Virginia</th><td><a href="https://www.doe.virginia.gov/teaching-learning-assessment/instruction/mathematics/standards-of-learning-for-mathematics" target="_blank" rel="noopener">Mathematics Standards of Learning ↗</a></td><td>Grade and course expectations, instructional resources, and the adopted version in use.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">My strongest direct standards experience is in mathematics. For a full K-12 portfolio, I'd build a clear cross-subject process, work closely with the people who know each discipline, and make standards ownership and review responsibilities explicit.</div>
+</div></section>
+
+<section class="section white" id="quality"><div class="shell">
+  <div class="heading-row"><div><span class="eyebrow">03 / From theory to implementation</span><h2>How I help teams maintain quality.</h2><p class="lead">Some of my most useful work has been behind the scenes: educational frameworks, authoring expectations, a curriculum dictionary, technical terminology checks, and tools that make decisions easier for instructional teams.</p></div><img class="section-fox" src="../assets/fox-snow-dive-orange.png" alt="" width="178" height="150" loading="lazy"></div>
+  <div class="two-col">
+    <article class="lined"><h3>Quality is designed into the process.</h3><p>In the curriculum work I've led, that means clear objectives, purposeful vocabulary, content accuracy, appropriate cognitive demand, accessibility, assessment alignment, and review that can actually be completed on schedule.</p><p>I like a quality review that answers practical questions: What is the learner doing? Does the assessment match the objective? Can another instructor use the material without having to guess what the author intended?</p></article>
+    <article class="lined"><h3>Fidelity is about the important parts.</h3><p>Teachers and subject specialists should have room for judgment. At the same time, a common framework needs enough consistency that students receive the intended learning experience, whether they're learning from one instructor, another instructor, or a video-based course.</p><p>That takes good templates, useful examples, clear decision rights, feedback, and a way to track changes when the curriculum evolves.</p></article>
+  </div>
+  <div class="intro-grid">
+    <article class="primer"><strong>SHARED LANGUAGE</strong><h3>Dictionary & vocabulary</h3><p>Common terminology reduces inconsistencies, unnecessary explanation and revision work across curriculum authors and production teams.</p></article>
+    <article class="primer"><strong>SHARED EXPECTATIONS</strong><h3>Review & calibration</h3><p>Rubrics, exemplars and review conversations make subjective expectations easier to discuss, apply and improve.</p></article>
+    <article class="primer"><strong>CONTINUOUS IMPROVEMENT</strong><h3>Data, feedback & iteration</h3><p>Use instructor experience, learner questions, assessment performance and quality issues to decide what to improve next.</p></article>
+  </div>
+  <div class="note">For external examples, I've summarized the principles rather than reposting AI4ALL's proprietary framework mappings, internal dictionary, Theory of Change, or student information.</div>
+</div></section>
+
+<section class="section" id="research"><div class="shell">
+  <span class="eyebrow">04 / AI & educational research</span><h2>Education is where I like to put AI to work.</h2>
+  <p class="lead">I enjoy building tools, but I care just as much about whether they're useful, whether they can be evaluated, and whether they preserve the judgment of educators and program staff.</p>
+  <div class="metric-grid">
+    <div class="metric"><strong>188</strong><span>Student AI/ML projects in a research atlas</span></div>
+    <div class="metric"><strong>4,044</strong><span>Source quotations verified in that project</span></div>
+    <div class="metric"><strong>~38%</strong><span>Reduction in measured content errors in an AI-assisted math QA workflow</span></div>
+  </div>
+  <div class="studies">
+    <article class="study"><span class="index">RESEARCH 01 / ASSESSMENT</span><h3>Rubric-calibrated AI grading</h3><p>I studied how an LLM's scores compare with trained human ratings across individual rubric criteria. The work includes human-alignment calibration, disagreement analysis and a route for expert review. The goal is to make evaluation more consistent and useful, not to replace instructor judgment with a black box.</p><span class="tiny">Public summary only. Detailed internal evaluation materials are not included.</span></article>
+    <article class="study"><span class="index">RESEARCH 02 / PROJECT INTELLIGENCE</span><h3>AI Project Intelligence Library</h3><p>A searchable research structure for 188 AI/ML student projects: techniques used, application sectors, datasets, technical sophistication, and project relationships. The public repository documents its evidence checks, research methodology and privacy safeguards.</p><a href="https://github.com/JonathanDoanePhD/AI_Project_Intelligence_Library" target="_blank" rel="noopener">See the public project documentation ↗</a></article>
+    <article class="study"><span class="index">RESEARCH 03 / RESPONSIBLE ANALYTICS</span><h3>Admissions review research</h3><p>I evaluated whether historical application data and written responses might help staff prioritize applications for human review. The study included held-out evaluation and equity checks, alongside clear limitations about model reproduction and generalization.</p><a href="https://github.com/JonathanDoanePhD/application-essay-retraction-model" target="_blank" rel="noopener">Read the research notes and limitations ↗</a></article>
+    <article class="study"><span class="index">RESEARCH 04 / CLASSROOM APPLICATION</span><h3>EdLight & positive reinforcement</h3><p>At EdLight, I reviewed over 1,000 handwritten math work samples to study misconception patterns for teacher-facing feedback. In my own classroom, I also developed and presented a participation-tracking approach focused on recognition, relationships and giving more students a reason to contribute.</p><span class="tiny">Applied research, instructional tools and teacher development.</span></article>
+  </div>
+  <div class="note">I also coauthored <a href="https://ai-4-all.org/how-we-keep-ignite-at-the-cutting-edge-of-ai-education/" target="_blank" rel="noopener">How We Keep Ignite at the Cutting Edge of AI Education ↗</a>, on active learning, accessible curriculum, responsible AI and preparing students to keep learning as the field changes.</div>
+</div></section>
+
+<section class="section white" id="leadership"><div class="shell">
+  <span class="eyebrow">05 / Leading the work</span><h2>I like helping good educators do their best work.</h2>
+  <p class="lead">At AI4ALL, I've recruited, coached and managed a nationally distributed instructional team, worked with curriculum developers and project leads, and partnered with people across education, product, engineering, data and leadership. I value clear expectations, real ownership and treating the subject experts as experts.</p>
+  <p class="lead">One useful shorthand for the culture I try to create is CARE:</p>
+  <div class="care"><article><span class="bigletter">C</span><h3>Commit</h3><p>Know what we're trying to accomplish and follow through.</p></article><article><span class="bigletter">A</span><h3>Advocate</h3><p>Remove barriers and make sure people have the support they need.</p></article><article><span class="bigletter">R</span><h3>Respect</h3><p>Listen carefully, welcome expertise and address problems directly.</p></article><article><span class="bigletter">E</span><h3>Empower</h3><p>Give people meaningful responsibility and room to grow.</p></article></div>
+  <div class="two-col"><article class="lined"><h3>What I'd bring to a growing curriculum team</h3><p>An explicit pedagogical framework, clear review norms, measurable quality standards, and systems that make cross-team coordination easier. I enjoy taking a big strategy and turning it into work people can actually execute.</p></article><article class="lined"><h3>What I'd want to learn from the team</h3><p>The subject-specific practices that make great ELA, science, social studies and electives distinctive. My strongest content expertise is mathematics and AI, and I see cross-disciplinary leadership as a partnership with talented managers and SMEs.</p></article></div>
+</div></section>
+
+<section class="bottom" id="connect"><div class="shell"><div class="bottom-inner"><div>
+  <span class="eyebrow" style="color:#bde1f4">Let's talk curriculum</span><h2>I’d love to hear what your team is building.</h2>
+  <p>Whether the challenge is a curriculum overhaul, stronger authoring practices, responsible AI integration, or bringing different subject teams together around a common vision, that's work I enjoy.</p>
+  <p><a href="mailto:JonathanDoanePhD@gmail.com">JonathanDoanePhD@gmail.com</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/JonathanDoanePhD/" target="_blank" rel="noopener">LinkedIn</a> &nbsp;·&nbsp; <a href="../">Research portfolio</a></p>
+  </div><img class="footer-fox" src="../assets/fox-pounce-orange.png" alt="" width="155" height="155" loading="lazy"></div>
+  <div class="footer-end"><span>© 2026 Jonathan D. Doane, Ph.D. · Curriculum & Instruction</span><span>External-facing summary · No student-level or proprietary program materials reproduced</span></div>
+</div></section>
+</main>
+</body>
+</html>
