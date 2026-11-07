@@ -35,7 +35,7 @@
     .skip:focus{top:12px}
     .top{position:sticky;top:calc(10px - var(--header-height,72px));z-index:50;background:#fff;border-bottom:1px solid var(--line);transition:top .24s ease;box-shadow:0 2px 8px rgba(23,68,95,.06)}
     .top:hover,.top:focus-within{top:0}
-    .top::after{content:"⌄";position:absolute;bottom:0;left:0;right:0;height:10px;text-align:center;font-size:12px;font-weight:800;line-height:9px;color:var(--orange);background:linear-gradient(to bottom,transparent 0 6px,#e8c5ae 6px 8px,transparent 8px);pointer-events:none}
+    .top::after{content:"";position:absolute;bottom:0;left:0;right:0;height:10px;background:linear-gradient(to bottom,transparent 0 6px,#e8c5ae 6px 8px,transparent 8px);pointer-events:none}
     .top-inner{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:14px 0}
     .identity{display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none;font-weight:800;letter-spacing:-.045em;font-size:1.05rem;white-space:nowrap}
     .identity img{width:40px;height:40px;object-fit:contain}
