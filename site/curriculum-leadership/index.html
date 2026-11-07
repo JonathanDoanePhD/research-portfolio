@@ -33,7 +33,9 @@
     .shell{width:min(1170px,calc(100% - 52px));margin:auto}
     .skip{position:absolute;top:-100px;left:15px;padding:12px;background:#fff;z-index:100}
     .skip:focus{top:12px}
-    .top{background:#fff;border-bottom:1px solid var(--line)}
+    .top{position:sticky;top:calc(10px - var(--header-height,72px));z-index:50;background:#fff;border-bottom:1px solid var(--line);transition:top .24s ease;box-shadow:0 2px 8px rgba(23,68,95,.06)}
+    .top:hover,.top:focus-within{top:0}
+    .top::after{content:"⌄";position:absolute;bottom:0;left:0;right:0;height:10px;text-align:center;font-size:12px;font-weight:800;line-height:9px;color:var(--orange);background:linear-gradient(to bottom,transparent 0 6px,#e8c5ae 6px 8px,transparent 8px);pointer-events:none}
     .top-inner{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:14px 0}
     .identity{display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none;font-weight:800;letter-spacing:-.045em;font-size:1.05rem;white-space:nowrap}
     .identity img{width:40px;height:40px;object-fit:contain}
@@ -112,7 +114,7 @@
     @media(max-width:970px){.hero-inner{grid-template-columns:1fr 260px}.nav{gap:12px}.process{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:720px){.shell{width:min(100% - 32px,1170px)}.top-inner{align-items:flex-start;flex-direction:column;gap:10px}.nav{gap:14px}.nav a{font-size:.79rem}.nav .nav-back{padding-left:12px}.hero-inner{display:flex;flex-direction:column;padding:56px 0 30px;min-height:auto;gap:0}.hero-art{width:100%;min-height:0;height:170px;justify-content:end}.hero-art img{max-height:196px;width:200px}.section{padding:54px 0}.intro-grid,.two-col,.studies{grid-template-columns:1fr}.metric-grid,.care{grid-template-columns:repeat(2,1fr)}.process{grid-template-columns:1fr}.table-scroll table{min-width:730px}.section-fox{width:125px}.bottom-inner{align-items:flex-end}.bottom .footer-fox{width:90px}}
     @media(max-width:420px){.heading-row{display:block}.section-fox{display:none}.bottom .footer-fox{display:none}.metric-grid,.care{grid-template-columns:1fr}h1{font-size:2.55rem}.hero-art{height:140px}}
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.top{transition:none}}
     @media print{body{background:#fff;font-size:11px}.top,.cta,.hero-art,.section-fox,.footer-fox{display:none}.hero-inner,.section{padding:25px 0;min-height:auto}.table-scroll{overflow:visible}table{font-size:10px}.process,.studies,.intro-grid{break-inside:avoid}.bottom{background:#17445f!important;print-color-adjust:exact}}
   </style>
 </head>
@@ -228,5 +230,13 @@
   <div class="footer-end"><span>© 2026 Jonathan D. Doane, Ph.D. · Curriculum & Instruction</span></div>
 </div></section>
 </main>
+<script>
+  // Keep only a narrow, hoverable edge of the navigation visible while scrolling.
+  const portfolioHeader = document.querySelector('.top');
+  const measureHeader = () => portfolioHeader.style.setProperty('--header-height', portfolioHeader.offsetHeight + 'px');
+  measureHeader();
+  if ('ResizeObserver' in window) new ResizeObserver(measureHeader).observe(portfolioHeader);
+  else window.addEventListener('resize', measureHeader);
+</script>
 </body>
 </html>
