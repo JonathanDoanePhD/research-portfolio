@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Curriculum fox favicon">
+  <rect width="64" height="64" rx="12" fill="#17445f"/>
+  <path d="M14 13 23 8l4 12-9 5z" fill="#f6f9fb"/>
+  <path d="M50 13 41 8l-4 12 9 5z" fill="#f6f9fb"/>
+  <path d="M16 27c0-11 8-17 16-17s16 6 16 17c0 11-8 21-16 21s-16-10-16-21Z" fill="#f47e2b"/>
+  <path d="M22 19c2-4 6-6 10-6s8 2 10 6l-4 2c-1-3-4-4-6-4s-5 1-6 4Z" fill="#ea6c19"/>
+  <path d="M20 31c5 2 8 3 12 3s7-1 12-3c-1 10-6 16-12 16S21 41 20 31Z" fill="#fff7ef"/>
+  <path d="M23 35c3 2 6 3 9 3s6-1 9-3" stroke="#17445f" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+  <path d="M28 28c1.6 0 2.8-1.1 2.8-2.5S29.6 23 28 23s-2.8 1.1-2.8 2.5S26.4 28 28 28Zm8 0c1.6 0 2.8-1.1 2.8-2.5S37.6 23 36 23s-2.8 1.1-2.8 2.5S34.4 28 36 28Z" fill="#17445f"/>
+  <path d="M29.3 30.8 32 29l2.7 1.8L32 33.6Z" fill="#17445f"/>
+  <path d="M13 46c4-3 12-5 19-5s15 2 19 5" stroke="#69b8e7" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M17 43.5h30c-1.5 4.8-5.5 10.5-15 10.5S18.5 48.3 17 43.5Z" fill="#f8fbfd" opacity=".95"/>
+  <path d="M20 43c3.5-2 7.5-3 12-3s8.5 1 12 3" stroke="#8bd0f2" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+  <path d="M23 47h18" stroke="#a7d9f5" stroke-width="1.6" stroke-linecap="round"/>
+</svg>
