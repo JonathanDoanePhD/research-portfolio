@@ -58,7 +58,7 @@
     .section.white{background:var(--white)}
     .lead{font-size:1.08rem;color:var(--muted);max-width:805px;line-height:1.75}
     .heading-row{display:grid;grid-template-columns:1fr auto;align-items:end;gap:25px}
-    .section-fox{width:178px;max-height:150px;object-fit:contain;object-position:center bottom}
+    .section-fox{width:178px;max-height:150px;object-fit:contain;object-position:center bottom}.section-fox.fox-wide{width:210px}
     .intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
     .primer{background:#fff;border:1px solid var(--line);padding:25px 27px}
     .primer strong{display:block;color:var(--blue);font-size:.8rem;letter-spacing:.07em;margin-bottom:8px}
@@ -112,8 +112,8 @@
     .footer-end{border-top:1px solid #4a7790;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;padding:21px 0 27px;color:#d6e6ed;font-size:.78rem}
     .footer-end a{font-size:.78rem}
     @media(max-width:970px){.hero-inner{grid-template-columns:1fr 260px}.nav{gap:12px}.process{grid-template-columns:repeat(3,1fr)}}
-    @media(max-width:720px){.shell{width:min(100% - 32px,1170px)}.top-inner{align-items:flex-start;flex-direction:column;gap:10px}.nav{gap:14px}.nav a{font-size:.79rem}.nav .nav-back{padding-left:12px}.hero-inner{display:flex;flex-direction:column;padding:56px 0 30px;min-height:auto;gap:0}.hero-art{width:100%;min-height:0;height:170px;justify-content:end}.hero-art img{max-height:196px;width:200px}.section{padding:54px 0}.intro-grid,.two-col,.studies{grid-template-columns:1fr}.metric-grid,.care{grid-template-columns:repeat(2,1fr)}.process{grid-template-columns:1fr}.table-scroll table{min-width:730px}.section-fox{width:125px}.bottom-inner{align-items:flex-end}.bottom .footer-fox{width:90px}}
-    @media(max-width:420px){.heading-row{display:block}.section-fox{display:none}.bottom .footer-fox{display:none}.metric-grid,.care{grid-template-columns:1fr}h1{font-size:2.55rem}.hero-art{height:140px}}
+    @media(max-width:720px){.shell{width:min(100% - 32px,1170px)}.top-inner{align-items:flex-start;flex-direction:column;gap:10px}.nav{gap:14px}.nav a{font-size:.79rem}.nav .nav-back{padding-left:12px}.hero-inner{display:flex;flex-direction:column;padding:56px 0 30px;min-height:auto;gap:0}.hero-art{width:100%;min-height:0;height:170px;justify-content:end}.hero-art img{max-height:196px;width:200px}.section{padding:54px 0}.intro-grid,.two-col,.studies{grid-template-columns:1fr}.metric-grid,.care{grid-template-columns:repeat(2,1fr)}.process{grid-template-columns:1fr}.table-scroll table{min-width:730px}.section-fox{width:125px}.section-fox.fox-wide{width:150px}.bottom-inner{align-items:flex-end}.bottom .footer-fox{width:90px}}
+    @media(max-width:420px){.heading-row{display:block}.section-fox,.section-fox.fox-wide{display:block;width:112px;max-height:100px;margin:12px 0 0 auto}.bottom .footer-fox{display:block;width:74px}.metric-grid,.care{grid-template-columns:1fr}h1{font-size:2.55rem}.hero-art{height:140px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.top{transition:none}}
     @media print{body{background:#fff;font-size:11px}.top,.cta,.hero-art,.section-fox,.footer-fox{display:none}.hero-inner,.section{padding:25px 0;min-height:auto}.table-scroll{overflow:visible}table{font-size:10px}.process,.studies,.intro-grid{break-inside:avoid}.bottom{background:#17445f!important;print-color-adjust:exact}}
   </style>
@@ -135,10 +135,10 @@
   <p>My work brings together K-12 mathematics, national AI education, curriculum development, team leadership, and practical AI research. I'm especially interested in what it takes to deliver a consistently strong learning experience at scale.</p>
   <div><a class="cta" href="#framework">See my framework</a><a class="cta ghost" href="#research">Explore the research</a></div>
   <p class="hero-details">Dr. Jonathan D. Doane · Ph.D., Mathematical Sciences · Curriculum & instructional leadership</p>
-</div><div class="hero-art"><img src="../assets/fox-observer-orange.png" alt="An orange fox, the recurring character from my research portfolio" width="360" height="375"></div></div></section>
+</div><div class="hero-art"><img src="../assets/hero-standing.png" alt="A standing orange fox" width="360" height="375"></div></div></section>
 
 <section class="section white" id="framework"><div class="shell">
-  <div class="heading-row"><div><span class="eyebrow">01 / The research behind the design</span><h2>Learning theory, organized for use.</h2><p class="lead">I use learning research to make practical decisions about curriculum, instruction, and assessment. These are the theories and frameworks I return to most often.</p></div><img class="section-fox" src="../assets/fox-paw-orange.png" alt="" width="178" height="150" loading="lazy"></div>
+  <div class="heading-row"><div><span class="eyebrow">01 / The research behind the design</span><h2>Learning theory, organized for use.</h2><p class="lead">I use learning research to make practical decisions about curriculum, instruction, and assessment. These are the theories and frameworks I return to most often.</p></div><img class="section-fox" src="../assets/01-charts.png" alt="Fox reviewing a chart" width="178" height="150" loading="lazy"></div>
   <div class="table-scroll theory-top"><table class="theory">
     
     <thead><tr><th scope="col">Area of practice</th><th scope="col">Researchers & frameworks</th><th scope="col">How it informs my curriculum work</th></tr></thead>
@@ -160,9 +160,9 @@
 </div></section>
 
 <section class="section" id="standards"><div class="shell">
-  <span class="eyebrow">02 / Standards & curricular coherence</span>
+  <div class="heading-row"><div><span class="eyebrow">02 / Standards & curricular coherence</span>
   <h2>One coherent experience. Different state requirements.</h2>
-  <p class="lead">I've worked with New York mathematics standards as a classroom teacher and with nationwide K-12 mathematics content at Huntington Learning Center. Those experiences taught me how to build consistent learning experiences while documenting and managing each state's requirements.</p>
+  <p class="lead">I've worked with New York mathematics standards as a classroom teacher and with nationwide K-12 mathematics content at Huntington Learning Center. Those experiences taught me how to build consistent learning experiences while documenting and managing each state's requirements.</p></div><img class="section-fox fox-wide" src="../assets/02-prowl.png" alt="Fox on the prowl" width="210" height="150" loading="lazy"></div>
   <div class="process" aria-label="Standards-alignment workflow">
     <article><span class="stepnum">STEP 01</span><h3>Find the right standard</h3><p>Confirm the state, subject, grade, course and current version.</p></article>
     <article><span class="stepnum">STEP 02</span><h3>Map the intent</h3><p>Record the skill, prerequisite knowledge and expected depth.</p></article>
@@ -185,7 +185,7 @@
 </div></section>
 
 <section class="section white" id="quality"><div class="shell">
-  <div class="heading-row"><div><span class="eyebrow">03 / From theory to implementation</span><h2>How I help teams maintain quality.</h2><p class="lead">Some of my most useful work has been behind the scenes: educational frameworks, authoring expectations, a curriculum dictionary, technical terminology checks, and tools that make decisions easier for instructional teams.</p></div><img class="section-fox" src="../assets/fox-snow-dive-orange.png" alt="" width="178" height="150" loading="lazy"></div>
+  <div class="heading-row"><div><span class="eyebrow">03 / From theory to implementation</span><h2>How I help teams maintain quality.</h2><p class="lead">Some of my most useful work has been behind the scenes: educational frameworks, authoring expectations, a curriculum dictionary, technical terminology checks, and tools that make decisions easier for instructional teams.</p></div><img class="section-fox" src="../assets/03-watchful.png" alt="Watchful fox" width="178" height="150" loading="lazy"></div>
   <div class="two-col">
     <article class="lined"><h3>Quality is designed into the process.</h3><p>In the curriculum work I've led, that means clear objectives, purposeful vocabulary, content accuracy, appropriate cognitive demand, accessibility, assessment alignment, and review that can actually be completed on schedule.</p><p>I like a quality review that answers practical questions: What is the learner doing? Does the assessment match the objective? Can another instructor use the material without having to guess what the author intended?</p></article>
     <article class="lined"><h3>Fidelity is about the important parts.</h3><p>Teachers and subject specialists should have room for judgment. At the same time, a common framework needs enough consistency that students receive the intended learning experience, whether they're learning from one instructor, another instructor, or a video-based course.</p><p>That takes good templates, useful examples, clear decision rights, feedback, and a way to track changes when the curriculum evolves.</p></article>
@@ -198,8 +198,8 @@
 </div></section>
 
 <section class="section" id="research"><div class="shell">
-  <span class="eyebrow">04 / AI & educational research</span><h2>Education is where I like to put AI to work.</h2>
-  <p class="lead">When I build tools, I think about how educators and program staff will use them, how we'll evaluate their value, and how they'll support human judgment.</p>
+  <div class="heading-row"><div><span class="eyebrow">04 / AI & educational research</span><h2>Education is where I like to put AI to work.</h2>
+  <p class="lead">When I build tools, I think about how educators and program staff will use them, how we'll evaluate their value, and how they'll support human judgment.</p></div><img class="section-fox fox-wide" src="../assets/04-laptop.png" alt="Fox working on a laptop" width="210" height="150" loading="lazy"></div>
   <div class="metric-grid">
     <div class="metric"><strong>188</strong><span>Student AI/ML projects in a research atlas</span></div>
     <div class="metric"><strong>4,044</strong><span>Source quotations verified in that project</span></div>
@@ -215,8 +215,8 @@
 </div></section>
 
 <section class="section white" id="leadership"><div class="shell">
-  <span class="eyebrow">05 / Leading the work</span><h2>I like helping good educators do their best work.</h2>
-  <p class="lead">At AI4ALL, I've recruited, coached and managed a nationally distributed instructional team, worked with curriculum developers and project leads, and partnered with people across education, product, engineering, data and leadership. I value clear expectations, real ownership and treating the subject experts as experts.</p>
+  <div class="heading-row"><div><span class="eyebrow">05 / Leading the work</span><h2>I like helping good educators do their best work.</h2>
+  <p class="lead">At AI4ALL, I've recruited, coached and managed a nationally distributed instructional team, worked with curriculum developers and project leads, and partnered with people across education, product, engineering, data and leadership. I value clear expectations, real ownership and treating the subject experts as experts.</p></div><img class="section-fox" src="../assets/05-smug.png" alt="Smug fox" width="178" height="150" loading="lazy"></div>
   <p class="lead">One useful shorthand for the culture I try to create is CARE:</p>
   <div class="care"><article><span class="bigletter">C</span><h3>Commit</h3><p>Know what we're trying to accomplish and follow through.</p></article><article><span class="bigletter">A</span><h3>Advocate</h3><p>Remove barriers and make sure people have the support they need.</p></article><article><span class="bigletter">R</span><h3>Respect</h3><p>Listen carefully, welcome expertise and address problems directly.</p></article><article><span class="bigletter">E</span><h3>Empower</h3><p>Give people meaningful responsibility and room to grow.</p></article></div>
   <div class="two-col"><article class="lined"><h3>What I'd bring to a growing curriculum team</h3><p>An explicit pedagogical framework, clear review norms, measurable quality standards, and systems that make cross-team coordination easier. I enjoy taking a big strategy and turning it into work people can actually execute.</p></article></div>
@@ -226,7 +226,7 @@
   <span class="eyebrow" style="color:#bde1f4">Let's talk curriculum</span><h2>I’d love to hear what your team is building.</h2>
   <p>Whether the challenge is a curriculum overhaul, stronger authoring practices, responsible AI integration, or bringing different subject teams together around a common vision, that's work I enjoy.</p>
   <p><a href="mailto:JonathanDoanePhD@gmail.com">JonathanDoanePhD@gmail.com</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/JonathanDoanePhD/" target="_blank" rel="noopener">LinkedIn</a> &nbsp;·&nbsp; <a href="../">Research portfolio</a></p>
-  </div><img class="footer-fox" src="../assets/fox-pounce-orange.png" alt="" width="155" height="155" loading="lazy"></div>
+  </div><img class="footer-fox" src="../assets/footer-happy.png" alt="Happy fox" width="155" height="155" loading="lazy"></div>
   <div class="footer-end"><span>© 2026 Jonathan D. Doane, Ph.D. · Curriculum & Instruction</span></div>
 </div></section>
 </main>
