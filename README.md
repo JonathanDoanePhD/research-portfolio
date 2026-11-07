@@ -2,6 +2,16 @@
 
 A responsive, single-page portfolio for Jonathan D. Doane, Ph.D., featuring quantitative research, statistical modeling, applied machine learning, and responsible AI projects.
 
+## Curriculum & Instruction portfolio
+
+The companion [Curriculum & Instruction leadership portfolio](https://jonathandoanephd.github.io/research-portfolio/curriculum-leadership/) presents Jonathan's work in learning sciences, framework stewardship, instructional quality, state-standards alignment and applied educational AI. It includes a table grouping named educational theories by application area, an illustrative state-by-state standards reference, and links to public research projects.
+
+- Page source: [site/curriculum-leadership/index.html](site/curriculum-leadership/index.html)
+- Navigation: the main research portfolio links to this page, and the curriculum page links back to the research portfolio.
+- Branding: the existing fox art and light blue/navy visual identity are reused, including a matching fox favicon.
+
+The public content is intentionally high-level. It does not publish private student information or proprietary curriculum operating materials.
+
 ## View locally
 
 No build tools are required. Open `site/index.html` in a browser, or serve the folder locally:
@@ -18,7 +28,8 @@ This repository includes `.github/workflows/pages.yml`. In the GitHub repository
 
 ## Structure
 
-- `site/index.html`: page content, styles, and canvas animation
+- `site/index.html`: main research portfolio, including a link to curriculum leadership
+- `site/curriculum-leadership/index.html`: curriculum and instructional leadership portfolio
 - `site/assets/`: transparent fox artwork
 - `.github/workflows/pages.yml`: Pages deployment
 
