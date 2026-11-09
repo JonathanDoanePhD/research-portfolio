@@ -1,6 +1,6 @@
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, cells, palette, colorBand}) {
+export function startCanvasMap({meta, palette, colorBand}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -21,8 +21,9 @@ export function startCanvasMap({meta, cells, palette, colorBand}) {
   };
   const tops = palette.map(value => '#' + value.toString(16).padStart(6, '0'));
   const sides = ['#cd9b75', '#d47842', '#b34621', '#348dbd', '#0d3b60'];
-  const bands = Uint8Array.from(cells.density, colorBand);
-  const order = Array.from({length:meta.count}, (_, i) => i);
+  let cells;
+  let bands;
+  let order;
   const visible = [];
   const screenX = new Float32Array(meta.count);
   const screenBase = new Float32Array(meta.count);
@@ -41,12 +42,6 @@ export function startCanvasMap({meta, cells, palette, colorBand}) {
   let cos, sin, tiltSin, tiltCos;
 
   for (const place of meta.places) {
-    place.peak = 0;
-    for (let i = 0; i < meta.count; i++) {
-      const dx = cells.x[i] - place.x;
-      const dz = cells.z[i] - place.z;
-      if (dx * dx + dz * dz < 64) place.peak = Math.max(place.peak, cells.elevation[i]);
-    }
     place.label = document.createElement('span');
     place.label.className = 'map-label';
     place.label.textContent = place.name;
@@ -272,7 +267,26 @@ export function startCanvasMap({meta, cells, palette, colorBand}) {
   };
   [controls.relief,controls.flat,controls.reset,controls.height].forEach(control => { control.disabled = false; });
   new ResizeObserver(queue).observe(stage);
-  draw();
+  function updateCells(grid) {
+    cells = grid;
+    bands = Uint8Array.from(cells.density, colorBand);
+    order = Array.from({length: cells.count}, (_, i) => i);
+    lastAngle = undefined;
+    for (const place of meta.places) {
+      place.peak = 0;
+      const range = place.name === 'New York City' ? 13 : 7;
+      for (let i = 0; i < cells.count; i++) {
+        const dx = cells.x[i] - place.x;
+        const dz = cells.z[i] - place.z;
+        if (dx * dx + dz * dz < (range + cells.radius[i]) ** 2) {
+          place.peak = Math.max(place.peak, cells.elevation[i]);
+        }
+      }
+    }
+    visible.length = 0;
+    queue();
+  }
   document.querySelector('#status').hidden = true;
   stage.dataset.ready = 'canvas';
+  return updateCells;
 }

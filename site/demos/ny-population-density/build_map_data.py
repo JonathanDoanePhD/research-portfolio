@@ -1,4 +1,5 @@
-"""Pack the validated NY GeoPackage for the demo. Requires GDAL Python bindings."""
+"""Pack the validated NY GeoPackage for the demo. Requires GDAL Python bindings and h3-py."""
+from collections import Counter
 import gzip
 import json
 import math
@@ -6,10 +7,13 @@ from pathlib import Path
 import struct
 import sys
 
+import h3
 from osgeo import ogr, osr
 
 ORIGIN_X, ORIGIN_Y = 1_660_000, 2_405_000
 STEP = 12
+SQUARE_METERS_PER_SQUARE_MILE = 1609.344 ** 2
+COARSER_GRIDS = ((7, 8), (6, 21), (5, 56))
 PLACES = [
     ("New York City", -73.98, 40.75, 43),
     ("Buffalo", -78.87, 42.89, 54),
@@ -20,10 +24,49 @@ PLACES = [
 ]
 
 
+def build_parent_grids(populations, transform, output):
+    levels = []
+    for resolution, radius_step in COARSER_GRIDS:
+        parents = Counter()
+        for cell, population in populations:
+            parents[h3.cell_to_parent(cell, resolution)] += population
+
+        cells = []
+        total_area = 0
+        for cell, population in parents.items():
+            lat, lon = h3.cell_to_latlng(cell)
+            x, y, _ = transform.TransformPoint(lon, lat)
+            ring = ogr.Geometry(ogr.wkbLinearRing)
+            for lat, lon in h3.cell_to_boundary(cell):
+                vx, vy, _ = transform.TransformPoint(lon, lat)
+                ring.AddPoint_2D(vx, vy)
+            ring.CloseRings()
+            polygon = ogr.Geometry(ogr.wkbPolygon)
+            polygon.AddGeometry(ring)
+            area = polygon.GetArea() / SQUARE_METERS_PER_SQUARE_MILE
+            total_area += area
+            vx, vy, _ = ring.GetPoint(0)
+            radius = math.hypot(vx - x, vy - y)
+            angle = math.atan2(vy - y, vx - x) % (math.pi / 3)
+            cells.append((round((x - ORIGIN_X) / STEP), round((ORIGIN_Y - y) / STEP),
+                          population / area, population, round(radius / radius_step),
+                          round(angle * 255 / (math.pi / 3))))
+
+        assert sum(cell[3] for cell in cells) == sum(population for _, population in populations)
+        cells.sort(key=lambda cell: (cell[1], cell[0]))
+        name = f"cells-r{resolution}.bin"
+        raw = b"".join(struct.pack("<hhfIBB", *cell) for cell in cells)
+        (output / name).write_bytes(gzip.compress(raw, compresslevel=9, mtime=0))
+        levels.append(dict(count=len(cells), chunks=[name], radiusStep=radius_step / 1000,
+                           averageArea=total_area / len(cells), resolution=resolution))
+    (output / "levels.json").write_text(json.dumps(levels, separators=(",", ":")) + "\n")
+
+
 def main(source, output):
     output.mkdir(parents=True, exist_ok=True)
     dataset = ogr.Open(source)
     cells = []
+    populations = []
     for f in dataset.GetLayerByName("kontur_hexagons"):
         polygon = f.GetGeometryRef()
         center = polygon.Centroid()
@@ -33,6 +76,7 @@ def main(source, output):
         radius = math.hypot(vx - x, vy - y)
         angle = math.atan2(vy - y, vx - x) % (math.pi / 3)
         density, pop = f["people_per_sq_mi"], f["population"]
+        populations.append((f["h3"], pop))
         cells.append((round((x - ORIGIN_X) / STEP), round((ORIGIN_Y - y) / STEP),
                       density, pop, round(radius / 3), round(angle * 255 / (math.pi / 3))))
     cells.sort(key=lambda cell: (cell[1], cell[0]))
@@ -58,6 +102,7 @@ def main(source, output):
     wgs.ImportFromEPSG(4326)
     wgs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
     tx = osr.CoordinateTransformation(wgs, outline_layer.GetSpatialRef())
+    build_parent_grids(populations, tx, output)
     places = []
     for name, lon, lat, distance in PLACES:
         x, y, _ = tx.TransformPoint(lon, lat)

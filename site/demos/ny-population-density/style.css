@@ -62,3 +62,6 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 .footer a{text-decoration:none}
 @media(max-width:720px){.wrap{width:calc(100% - 24px)}.topbar{min-height:54px}.intro{padding:23px 0 15px}.toolbar{gap:7px;padding:7px}.height-control{gap:4px}.height-control input{width:55px}.toolbar button{padding-inline:7px}.controls-hint{display:none}#stage{height:450px}.legend{bottom:8px;left:8px}.places{padding:8px}.readout div{padding:8px}.readout span{font-size:1.23rem}.readout p{font-size:.74rem}}
 @media(max-width:375px){.height-control{font-size:.72rem}.height-control input{width:40px}.toolbar button{font-size:.75rem}.legend ul{gap:7px}}
+
+.granularity output{color:var(--slate);font-size:.73rem;min-width:76px;white-space:nowrap}
+@media(max-width:720px){.toolbar{flex-wrap:wrap}.granularity{order:3;width:100%;padding:2px 3px 1px}.granularity input{width:min(160px,40vw)}}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js';
+import { startCanvasMap } from './fallback.js?v=linear-grid';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -15,7 +15,7 @@ const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
 const palette = [0xedc5a2, 0xf39655, 0xdf6027, 0x53b7e6, 0x135888];
 const colorBand = d => d < 10 ? 0 : d < 100 ? 1 : d < 1000 ? 2 : d < 10000 ? 3 : 4;
-const towerHeight = d => 0.4 + 66 * Math.log1p(d / 85) / Math.log1p(120000 / 85);
+const towerHeight = density => density * (66 / 120000);
 
 async function checkedFetch(path) {
   const response = await fetch(path);
@@ -23,35 +23,68 @@ async function checkedFetch(path) {
   return response;
 }
 
-async function readGrid() {
-  const meta = await (await checkedFetch('data/map.json')).json();
+async function readGrid(meta) {
+  const recordBytes = meta.radiusStep ? 14 : 12;
+  const radiusStep = meta.radiusStep ?? 0.003;
   const chunks = await Promise.all(meta.chunks.map(async name => {
     const response = await checkedFetch(`data/${name}`);
     return new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   }));
-  if (chunks.reduce((total, chunk) => total + chunk.byteLength, 0) !== meta.count * 12) {
+  if (chunks.reduce((total, chunk) => total + chunk.byteLength, 0) !== meta.count * recordBytes) {
     throw new Error('Population grid has an unexpected length.');
   }
   const cells = {
+    count: meta.count,
     x: new Float32Array(meta.count), z: new Float32Array(meta.count),
     density: new Float32Array(meta.count), elevation: new Float32Array(meta.count),
     radius: new Float32Array(meta.count), angle: new Float32Array(meta.count),
-    population: new Uint16Array(meta.count),
+    population: new Uint32Array(meta.count),
   };
   let index = 0;
   for (const chunk of chunks) {
     const data = new DataView(chunk);
-    for (let offset = 0; offset < data.byteLength; offset += 12, index++) {
+    for (let offset = 0; offset < data.byteLength; offset += recordBytes, index++) {
       cells.x[index] = data.getInt16(offset, true) * meta.step;
       cells.z[index] = data.getInt16(offset + 2, true) * meta.step;
       cells.density[index] = data.getFloat32(offset + 4, true);
       cells.elevation[index] = towerHeight(cells.density[index]);
-      cells.population[index] = data.getUint16(offset + 8, true);
-      cells.radius[index] = data.getUint8(offset + 10) * 0.003;
-      cells.angle[index] = data.getUint8(offset + 11) * Math.PI / (3 * 255);
+      cells.population[index] = recordBytes === 12 ? data.getUint16(offset + 8, true) : data.getUint32(offset + 8, true);
+      cells.radius[index] = data.getUint8(offset + recordBytes - 2) * radiusStep;
+      cells.angle[index] = data.getUint8(offset + recordBytes - 1) * Math.PI / (3 * 255);
     }
   }
-  return { meta, cells };
+  return cells;
+}
+
+function wireGranularity(levels, grids, renderGrid) {
+  const control = document.querySelector('#granularity');
+  const areaLabel = document.querySelector('#cell-area');
+  const countLabel = document.querySelector('#grid-count');
+  const shareLabel = document.querySelector('#dense-share');
+  function update() {
+    const index = Number(control.value);
+    const cells = grids[index];
+    const area = new Intl.NumberFormat('en-US', {maximumSignificantDigits: 2}).format(levels[index].averageArea);
+    areaLabel.textContent = `~${area} sq. mi.`;
+    control.setAttribute('aria-valuetext', `${index === 0 ? 'Original cells, ' : ''}about ${area} square miles per hexagon`);
+    countLabel.textContent = number.format(cells.count);
+    let total = 0;
+    let dense = 0;
+    for (let i = 0; i < cells.count; i++) {
+      total += cells.population[i];
+      if (cells.density[i] >= 10000) dense += cells.population[i];
+    }
+    shareLabel.textContent = new Intl.NumberFormat('en-US', {style: 'percent'}).format(dense / total);
+    renderGrid(cells);
+  }
+  control.oninput = update;
+  control.disabled = false;
+  reset.addEventListener('click', () => {
+    if (control.value === '0') return;
+    control.value = '0';
+    update();
+  });
+  update();
 }
 
 function stateBase(polygons) {
@@ -74,12 +107,17 @@ function stateBase(polygons) {
 }
 
 async function start() {
-  const { meta, cells } = await readGrid();
+  const [meta, parentLevels] = await Promise.all(
+    ['data/map.json', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+  );
+  const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
+  const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
+  let cells = grids[0];
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    startCanvasMap({meta, cells, palette, colorBand});
+    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand}));
     return;
   }
   renderer.setClearColor(0x000000, 0);
@@ -120,7 +158,6 @@ async function start() {
   const paint = palette.map(hex => new THREE.Color(hex));
   const idColor = new THREE.Color();
   for (let i = 0; i < meta.count; i++) {
-    towers.setColorAt(i, paint[colorBand(cells.density[i])]);
     const id = i + 1;
     picker.setColorAt(i, idColor.setRGB((id & 255) / 255, ((id >>> 8) & 255) / 255, (id >>> 16) / 255));
   }
@@ -128,8 +165,8 @@ async function start() {
   const matrix = new THREE.Matrix4();
   let multiplier = 1;
   function updateHeights() {
-    for (let i = 0; i < meta.count; i++) {
-      const h = Math.max(0.25, cells.elevation[i] * multiplier);
+    for (let i = 0; i < cells.count; i++) {
+      const h = Math.max(0.0001, cells.elevation[i] * multiplier);
       const r = cells.radius[i] * 0.98;
       const a = cells.angle[i];
       const c = r * Math.cos(a);
@@ -140,19 +177,11 @@ async function start() {
     }
     towers.instanceMatrix.needsUpdate = true;
   }
-  updateHeights();
 
   let selected = null;
   let flat = false;
   let worldWidth = 800;
   for (const place of meta.places) {
-    place.peak = 0;
-    const range = place.name === 'New York City' ? 13 : 7;
-    for (let i = 0; i < meta.count; i++) {
-      const dx = cells.x[i] - place.x;
-      const dz = cells.z[i] - place.z;
-      if (dx * dx + dz * dz < range * range) place.peak = Math.max(place.peak, cells.elevation[i]);
-    }
     place.label = document.createElement('span');
     place.label.className = 'map-label';
     place.label.textContent = place.name;
@@ -267,7 +296,7 @@ async function start() {
     renderer.setRenderTarget(null);
     camera.clearViewOffset();
     const index = (pixel[0] + 256 * pixel[1] + 65536 * pixel[2]) - 1;
-    tip.hidden = index < 0 || index >= meta.count;
+    tip.hidden = index < 0 || index >= cells.count;
     if (tip.hidden) return;
     tip.replaceChildren();
     const title = document.createElement('strong');
@@ -294,6 +323,28 @@ async function start() {
     }
     pointerStart = null;
   });
+
+  function updateCells(grid) {
+    cells = grid;
+    towers.count = picker.count = cells.count;
+    for (let i = 0; i < cells.count; i++) towers.setColorAt(i, paint[colorBand(cells.density[i])]);
+    towers.instanceColor.needsUpdate = true;
+    for (const place of meta.places) {
+      place.peak = 0;
+      const range = place.name === 'New York City' ? 13 : 7;
+      for (let i = 0; i < cells.count; i++) {
+        const dx = cells.x[i] - place.x;
+        const dz = cells.z[i] - place.z;
+        if (dx * dx + dz * dz < (range + cells.radius[i]) ** 2) {
+          place.peak = Math.max(place.peak, cells.elevation[i]);
+        }
+      }
+    }
+    updateHeights();
+    tip.hidden = true;
+    queueDraw();
+  }
+  wireGranularity(levels, grids, updateCells);
 
   [view3D, viewFlat, reset, height].forEach(control => { control.disabled = false; });
   status.hidden = true;
