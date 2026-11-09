@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population Density | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=physical-relief">
+  <link rel="stylesheet" href="style.css?v=studio-map">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=physical-relief').catch(error => {
+    import('./app.js?v=studio-map').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -38,17 +38,30 @@
           <button id="view-3d" type="button" aria-pressed="true" disabled>3D relief</button>
           <button id="view-flat" type="button" aria-pressed="false" disabled>Top down</button>
         </div>
-        <label class="height-control" for="height">Tower height <input id="height" type="range" min="0" max="180" value="100" disabled></label>
+        <label class="height-control" for="height">Tower height <input id="height" type="range" min="0" max="180" value="180" aria-valuetext="180%" disabled></label>
         <label class="height-control granularity" for="granularity">
           Granularity
           <input id="granularity" type="range" min="0" max="3" step="1" value="0" disabled>
           <output id="cell-area" for="granularity">~0.3 sq. mi.</output>
         </label>
+        <button id="fullscreen" class="reset" type="button" aria-pressed="false" hidden>Fullscreen</button>
         <button id="reset" class="reset" type="button" disabled><span aria-hidden="true">↺</span> Reset</button>
       </div>
       <div class="layer-controls" role="group" aria-label="Map overlays">
         <label><input id="show-geography" type="checkbox" disabled> Geographic features</label>
         <label><input id="show-elevation" type="checkbox" disabled> Elevation</label>
+        <label>Palette <select id="palette">
+          <option value="orangeBlue">Orange / White / Blue</option>
+          <option value="greenOrange">Green / White / Orange</option>
+          <option value="greenWhite">Green / White</option>
+          <option value="custom">Custom</option>
+        </select></label>
+        <div id="custom-palette" class="custom-palette" hidden>
+          <label>Low <input id="color-low" type="color" value="#df631e"></label>
+          <label><input id="color-mid-enabled" type="checkbox" checked> Midpoint</label>
+          <input id="color-mid" type="color" aria-label="Midpoint color" value="#ffffff">
+          <label>High <input id="color-high" type="color" value="#124576"></label>
+        </div>
       </div>
       <div id="stage">
         <svg id="geographic-overlay" aria-hidden="true"></svg>
@@ -81,7 +94,7 @@
       <summary>How to read this map</summary>
       <p>Each tower represents one hexagon. Color rises through a shared density scale from the base of each tower. The color at the tip shows the cell’s density, and tower height above the ground is directly proportional to it. Move Granularity to the right to group cells into larger hexagons. Hover or tap a cell for its estimated density and population.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
-      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries, and <strong>Elevation</strong> to raise the shaded terrain beneath the density towers. The terrain is vertically exaggerated 14× for readability. In 3D the light stays fixed in the view as the map turns. Elevation and density can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
+      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries, and <strong>Elevation</strong> to raise the shaded terrain beneath the density towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and density can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
       <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>
     </details>
   </main>

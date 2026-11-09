@@ -64,15 +64,35 @@ export function createLayers(data, redraw) {
   return {
     terrain,
     get showElevation() { return elevationToggle.checked; },
-    render(project) {
+    get showGeography() { return geographyToggle.checked; },
+    render(project, hidden) {
       if (!geographyToggle.checked) return;
       for (const {feature, path, label} of entries) {
-        const d = feature.paths.map(line => line.map(([x,z], index) => {
-          const [px,py] = project(x,z);
-          return `${index ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)}`;
-        }).join('')).join('');
+        let d = '';
+        for (const line of feature.paths) {
+          let previous;
+          let pen = 'M';
+          for (const point of line) {
+            const next = project(...point);
+            const from = previous ?? next;
+            const steps = hidden ? Math.max(1, Math.min(150, Math.ceil(Math.hypot(next[0]-from[0],next[1]-from[1])/2))) : 1;
+            for (let i=1;i<=steps;i++) {
+              const t = i/steps;
+              const x = from[0]+t*(next[0]-from[0]);
+              const y = from[1]+t*(next[1]-from[1]);
+              const depth = from[2]+t*(next[2]-from[2]);
+              if (hidden?.(x,y,depth)) pen = 'M';
+              else {
+                d += `${pen}${x.toFixed(1)} ${y.toFixed(1)}`;
+                pen = 'L';
+              }
+            }
+            previous = next;
+          }
+        }
         path.setAttribute('d', d);
-        const [x,y] = project(...feature.anchor);
+        const [x,y,depth] = project(...feature.anchor);
+        label.style.visibility = hidden?.(x,y-5,depth) || hidden?.(x,y,depth) ? 'hidden' : 'visible';
         label.setAttribute('x', x.toFixed(1));
         label.setAttribute('y', (y - 5).toFixed(1));
       }

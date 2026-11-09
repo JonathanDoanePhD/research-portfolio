@@ -1,10 +1,12 @@
-import { createLayers } from './layers.js?v=physical-relief';
-import { densityColor, maxDensity, stops } from './population-colors.js';
+import { createLayers } from './layers.js?v=studio-map';
+import { densityColor, maxDensity, paletteStops } from './population-colors.js?v=studio-map';
+import { flatLightPosition, groundShadow } from './studio-light.js';
+import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, sunPosition, layerData}) {
+export function startCanvasMap({meta, palette, layerData}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -27,17 +29,24 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
   colorStrip.width = 1;
   colorStrip.height = 4096;
   const strip = colorStrip.getContext('2d');
-  const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
-  // Draw the common scale once, then crop it at each tower's own density.
-  for (const [density,color] of stops) gradient.addColorStop(1-density/maxDensity,color);
-  strip.fillStyle = gradient;
-  strip.fillRect(0,0,1,colorStrip.height);
-  const shadowX = -sunPosition.x / sunPosition.y;
-  const shadowZ = -sunPosition.z / sunPosition.y;
+  let stops;
+  function updatePalette(colors) {
+    stops = paletteStops(colors);
+    const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
+    for (const [at,color] of stops) gradient.addColorStop(1-at,color);
+    strip.fillStyle = gradient;
+    strip.fillRect(0,0,1,colorStrip.height);
+    if (cells) {
+      tops = Array.from(cells.density,density=>densityColor(density,stops));
+      queue();
+    }
+  }
   let cells;
   let tops;
   let groundLevels;
   let order;
+  updatePalette(palette.colors);
+  palette.subscribe(updatePalette);
   const visible = [];
   const screenX = new Float32Array(meta.count);
   const screenBase = new Float32Array(meta.count);
@@ -164,34 +173,27 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
     }
   }
 
-  function drawShadows(width, tall, multiplier) {
+  function drawShadows(width,tall,multiplier) {
     if (multiplier === 0 || overlays.showElevation) return;
-    // On the flat ground plane the view-fixed light has an exact projected cast vector.
-    const shiftX = shadowX * scale;
-    const shiftY = shadowZ * tiltSin * scale;
-    const length = Math.hypot(shiftX, shiftY);
-    const minHeight = .65 / length;
-    const normalX = -shiftY / length;
-    const normalY = shiftX / length;
+    const [lx,ly,lz] = flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos);
     context.beginPath();
     for (const i of order) {
-      const elevation = cells.elevation[i] * multiplier;
-      if (elevation < minHeight) continue;
-      const dx = cells.x[i] - centerX;
-      const dz = cells.z[i] - centerZ;
-      const x = width/2 + (dx*cos - dz*sin)*scale;
-      const y = tall/2 + (dx*sin + dz*cos)*tiltSin*scale;
-      const endX = x + shiftX*elevation;
-      const endY = y + shiftY*elevation;
-      const radius = Math.max(.42, cells.radius[i]*scale*.91);
-      if (Math.max(x,endX)+radius < 0 || Math.min(x,endX)-radius > width ||
-          Math.max(y,endY)+radius < 0 || Math.min(y,endY)-radius > tall) continue;
-      const nx = normalX*radius;
-      const ny = normalY*radius;
-      context.moveTo(x+nx,y+ny);
-      context.lineTo(endX+nx,endY+ny);
-      context.lineTo(endX-nx,endY-ny);
-      context.lineTo(x-nx,y-ny);
+      const h = cells.elevation[i]*multiplier;
+      if (h*scale < .20) continue;
+      const [x,y] = project(cells.x[i],cells.z[i],0);
+      const [endX,endY] = project(...groundShadow(cells.x[i],cells.z[i],h,lx,ly,lz),0);
+      const length = Math.hypot(endX-x,endY-y);
+      if (length<.65) continue;
+      const radius = Math.max(.42,cells.radius[i]*scale*.91);
+      const endRadius = radius*ly/Math.max(1,ly-h);
+      if (Math.max(x,endX)+endRadius<0 || Math.min(x,endX)-endRadius>width ||
+          Math.max(y,endY)+endRadius<0 || Math.min(y,endY)-endRadius>tall) continue;
+      const nx = -(endY-y)/length;
+      const ny = (endX-x)/length;
+      context.moveTo(x+nx*radius,y+ny*radius);
+      context.lineTo(endX+nx*endRadius,endY+ny*endRadius);
+      context.lineTo(endX-nx*endRadius,endY-ny*endRadius);
+      context.lineTo(x-nx*radius,y-ny*radius);
       context.closePath();
     }
     context.fillStyle = 'rgba(20,43,62,.24)';
@@ -229,6 +231,7 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
     drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
+    const occlusion = overlays.showGeography ? makeTowerOcclusion(width) : null;
     for (const i of order) {
       const dx = cells.x[i] - centerX;
       const dz = cells.z[i] - centerZ;
@@ -266,10 +269,19 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
       screenTop[i] = top;
       radii[i] = radius;
       visible.push(i);
+      if (occlusion) {
+        const depth = (dx*sin+dz*cos)*tiltCos + base*tiltSin;
+        occlusion.add(x,y,top,radius,depth,depth+cells.elevation[i]*multiplier*tiltSin,capHeight/2);
+      }
     }
     context.globalAlpha = 1;
     const surfaceAt = (x,z) => overlays.showElevation ? groundHeight(terrain,x,z) : 0;
-    overlays.render((x,z) => project(x,z,surfaceAt(x,z)));
+    if (occlusion) overlays.render((x,z) => {
+      const y = surfaceAt(x,z)+.08;
+      const [px,py] = project(x,z,y);
+      const depth = ((x-centerX)*sin+(z-centerZ)*cos)*tiltCos+y*tiltSin;
+      return [px,py,depth];
+    },occlusion.hides);
     for (const place of meta.places) {
       const [x, y] = project(place.x, place.z, surfaceAt(place.x,place.z) + (place.peak + 2) * multiplier);
       place.label.hidden = x < 28 || x > width - 28 || y < 22 || y > tall - 25 ||
@@ -347,7 +359,7 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
     if (drag.pan) pan(dx,dy);
     else {
       angle -= dx*.007;
-      incline = Math.max(.30,Math.min(1.35,incline-dy*.004));
+      incline = Math.max(.19,Math.min(Math.PI/2-.001,incline-dy*.004));
     }
     queue();
   });
@@ -380,8 +392,8 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
   controls.flat.onclick = () => switchView(true);
   controls.reset.onclick = () => {
     selected = null;
-    controls.height.value = 100;
-    controls.height.setAttribute('aria-valuetext','100%');
+    controls.height.value = controls.height.max;
+    controls.height.setAttribute('aria-valuetext',`${controls.height.value}%`);
     switchView(false);
   };
   controls.height.oninput = () => {
@@ -392,7 +404,7 @@ export function startCanvasMap({meta, sunPosition, layerData}) {
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    tops = Array.from(cells.density, densityColor);
+    tops = Array.from(cells.density,density=>densityColor(density,stops));
     groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;

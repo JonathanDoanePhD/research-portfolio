@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=physical-relief';
-import { createLayers, readLayers } from './layers.js?v=physical-relief';
-import { stops } from './population-colors.js';
+import { startCanvasMap } from './fallback.js?v=studio-map';
+import { createLayers, readLayers } from './layers.js?v=studio-map';
+import { colorChannels, createPalette, maxDensity } from './population-colors.js?v=studio-map';
+import { studio } from './studio-light.js';
+import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
 
 const stage = document.querySelector('#stage');
@@ -17,37 +19,58 @@ const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
 const towerHeight = density => density * (112 / 120000);
-const sunPosition = {x:-350, y:600, z:-350};
-
-const legend = document.querySelector('#density-bands');
-legend.style.setProperty('--density-gradient', `linear-gradient(90deg,${stops.map(([,color]) => color).join(',')})`);
-for (const [density] of stops) {
-  const entry = document.createElement('li');
-  entry.textContent = density >= 1000 ? `${density > 100000 ? Math.round(density/1000) : density/1000}k` : String(density);
-  entry.title = `${number.format(Math.round(density))} people per square mile`;
-  legend.append(entry);
+const palette = createPalette();
+const fullScreen = document.querySelector('#fullscreen');
+const mapCard = stage.closest('.map-card');
+if (document.fullscreenEnabled && mapCard.requestFullscreen) {
+  fullScreen.hidden = false;
+  fullScreen.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement === mapCard) await document.exitFullscreen();
+      else await mapCard.requestFullscreen();
+    } catch (error) {
+      console.warn('Fullscreen unavailable.', error);
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const active = document.fullscreenElement === mapCard;
+    fullScreen.textContent = active ? 'Exit fullscreen' : 'Fullscreen';
+    fullScreen.setAttribute('aria-pressed',String(active));
+  });
 }
 
-function towerMaterial() {
+function towerMaterial(queueDraw) {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
-  const color = hex => {
-    const c = new THREE.Color(hex);
-    return `vec3(${[c.r,c.g,c.b].map(v => v.toFixed(7)).join(',')})`;
-  };
-  const gradient = stops.slice(1).map(([to,end],i) => {
-    const [from,start] = stops[i];
-    return `if (d <= ${to.toFixed(6)}) return mix(${color(start)}, ${color(end)}, (d-${from.toFixed(6)})/${(to-from).toFixed(6)});`;
-  }).join('\n');
+  const toRgb = hex => new THREE.Vector3(...colorChannels(hex).map(v=>v/255));
+  const low = {value:new THREE.Vector3()};
+  const middle = {value:new THREE.Vector3()};
+  const high = {value:new THREE.Vector3()};
+  const midpoint = {value:false};
+  function sync([a,b,c]) {
+    low.value.copy(toRgb(a));
+    middle.value.copy(toRgb(b ?? a));
+    high.value.copy(toRgb(c));
+    midpoint.value = Boolean(b);
+  }
+  sync(palette.colors);
+  palette.subscribe(colors => { sync(colors); queueDraw(); });
   material.onBeforeCompile = shader => {
+    Object.assign(shader.uniforms,{rampLow:low,rampMiddle:middle,rampHigh:high,hasMidpoint:midpoint});
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float towerDensity;\nvarying float densityAtHeight;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\ndensityAtHeight = towerDensity * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         varying float densityAtHeight;
+        uniform vec3 rampLow, rampMiddle, rampHigh;
+        uniform bool hasMidpoint;
         vec3 populationGradient(float d) {
-          ${gradient}
-          return ${color(stops.at(-1)[1])};
+          float t = clamp(d / ${maxDensity.toFixed(6)}, 0.0, 1.0);
+          vec3 c = mix(rampLow, rampHigh, t);
+          if (hasMidpoint) {
+            c = t <= 0.5 ? mix(rampLow, rampMiddle, 2.0*t) : mix(rampMiddle, rampHigh, 2.0*t-1.0);
+          }
+          return mix(c/12.92, pow((c+0.055)/1.055, vec3(2.4)), step(vec3(0.04045),c));
         }`)
       .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= populationGradient(densityAtHeight);');
   };
@@ -157,7 +180,7 @@ async function start() {
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, sunPosition, layerData}));
+    wireGranularity(levels, grids, startCanvasMap({meta, palette, layerData}));
     return;
   }
   renderer.shadowMap.enabled = true;
@@ -172,13 +195,13 @@ async function start() {
 
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 1.5));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.95);
-  sun.position.set(sunPosition.x, sunPosition.y, sunPosition.z);
+  const sun = new THREE.SpotLight(0xffffff,2.4,0,Math.PI/2.45,.24,0);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, {left:-565, right:565, top:565, bottom:-565, near:10, far:1550});
-  sun.shadow.camera.updateProjectionMatrix();
-  sun.shadow.normalBias = 0.08;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.near = 12;
+  sun.shadow.camera.far = 2800;
+  sun.shadow.normalBias = .08;
+  scene.add(sun.target);
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(1600, 1600),
     new THREE.ShadowMaterial({color:0x17364f, opacity:.22, depthWrite:false})
@@ -192,14 +215,14 @@ async function start() {
   const controls = new OrbitControls(camera, canvas);
   controls.minZoom = 0.7;
   controls.maxZoom = 45;
-  controls.maxPolarAngle = Math.PI / 2.15;
+  controls.maxPolarAngle = Math.PI * .44;
   controls.listenToKeyEvents(canvas);
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   prism.rotateY(-Math.PI / 2);
   const towerDensities = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
   prism.setAttribute('towerDensity', towerDensities);
-  const towers = new THREE.InstancedMesh(prism, towerMaterial(), meta.count);
+  const towers = new THREE.InstancedMesh(prism, towerMaterial(queueDraw), meta.count);
   towers.frustumCulled = false;
   towers.castShadow = true;
   towers.receiveShadow = true;
@@ -220,7 +243,7 @@ async function start() {
   }
 
   const matrix = new THREE.Matrix4();
-  let multiplier = 1;
+  let multiplier = Number(height.value)/100;
   let groundLevels;
   function updateHeights() {
     for (let i = 0; i < cells.count; i++) {
@@ -261,8 +284,10 @@ async function start() {
   let frame;
   let terrainMesh;
   let terrainWasVisible = false;
-  let lightRightX;
-  let lightRightZ;
+  const previousLight = new THREE.Vector3(Infinity,Infinity,Infinity);
+  const lightPoint = new THREE.Vector3();
+  const projectedBase = new THREE.Vector3();
+  const projectedTop = new THREE.Vector3();
   const overlays = createLayers(layerData, queueDraw);
   if (overlays.terrain) {
     const {image,left,top,width,height:depth,cols,rows,heights} = overlays.terrain;
@@ -286,20 +311,40 @@ async function start() {
     return terrainWasVisible ? groundHeight(overlays.terrain,x,z) : 0;
   }
 
-  function project(x, z) {
-    point.set(x, surfaceAt(x,z), z).project(camera);
-    return [(point.x+1)*stage.clientWidth/2, (1-point.y)*stage.clientHeight/2];
+  function project(x,z) {
+    point.set(x,surfaceAt(x,z)+.08,z).project(camera);
+    return [(point.x+1)*stage.clientWidth/2,(1-point.y)*stage.clientHeight/2,-point.z];
+  }
+
+  function towerOcclusion() {
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const screenScale = w * camera.zoom / (camera.right-camera.left);
+    const index = makeTowerOcclusion(w);
+    for (let i=0;i<cells.count;i++) {
+      const y = terrainWasVisible ? groundLevels[i] : 0;
+      const radius = cells.radius[i]*screenScale;
+      const towerHeight = cells.elevation[i]*multiplier;
+      if (radius < 2 && towerHeight*screenScale < 1.5) continue;
+      projectedBase.set(cells.x[i],y,cells.z[i]).project(camera);
+      projectedTop.set(cells.x[i],y+towerHeight,cells.z[i]).project(camera);
+      const x = (projectedBase.x+1)*w/2;
+      const base = (1-projectedBase.y)*h/2;
+      const top = (1-projectedTop.y)*h/2;
+      if (x+radius<0 || x-radius>w || base+radius<0 || top-radius>h) continue;
+      index.add(x,base,top,radius,-projectedBase.z,-projectedTop.z,radius*.55);
+    }
+    return index.hides;
   }
 
   function updateLight() {
     camera.updateMatrixWorld();
-    const [rightX, , rightZ] = camera.matrixWorld.elements;
-    if (lightRightX !== undefined && Math.hypot(rightX-lightRightX,rightZ-lightRightZ) < .0001) return;
-    lightRightX = rightX;
-    lightRightZ = rightZ;
-    sun.position.set(sunPosition.x*rightX - sunPosition.z*rightZ,
-                     sunPosition.y,
-                     sunPosition.x*rightZ + sunPosition.z*rightX);
+    const distance = camera.position.distanceTo(controls.target);
+    lightPoint.set(studio.x,studio.y,studio.z-distance).applyMatrix4(camera.matrixWorld);
+    if (previousLight.distanceToSquared(lightPoint)<.001 && sun.target.position.distanceToSquared(controls.target)<.001) return;
+    previousLight.copy(lightPoint);
+    sun.position.copy(lightPoint);
+    sun.target.position.copy(controls.target);
     renderer.shadowMap.needsUpdate = true;
   }
 
@@ -313,7 +358,7 @@ async function start() {
       }
       updateLight();
       renderer.render(scene, camera);
-      overlays.render(project);
+      if (overlays.showGeography) overlays.render(project,towerOcclusion());
       for (const place of meta.places) {
         point.set(place.x, surfaceAt(place.x,place.z) + (flat ? 0 : place.peak * multiplier + 2), place.z).project(camera);
         const x = (point.x + 1) * stage.clientWidth / 2;
@@ -369,8 +414,9 @@ async function start() {
   view3D.onclick = () => { flat = false; moveCamera(); };
   viewFlat.onclick = () => { flat = true; moveCamera(); };
   reset.onclick = () => {
-    height.value = 100;
-    multiplier = 1;
+    height.value = height.max;
+    height.setAttribute('aria-valuetext',`${height.value}%`);
+    multiplier = Number(height.value)/100;
     selected = null;
     flat = false;
     updateHeights();
