@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population Density | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=studio-map">
+  <link rel="stylesheet" href="style.css?v=studio-fullscreen">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=studio-map').catch(error => {
+    import('./app.js?v=studio-fullscreen').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });

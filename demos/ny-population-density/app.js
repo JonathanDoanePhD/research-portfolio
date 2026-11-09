@@ -22,22 +22,35 @@ const towerHeight = density => density * (112 / 120000);
 const palette = createPalette();
 const fullScreen = document.querySelector('#fullscreen');
 const mapCard = stage.closest('.map-card');
-if (document.fullscreenEnabled && mapCard.requestFullscreen) {
-  fullScreen.hidden = false;
-  fullScreen.addEventListener('click', async () => {
-    try {
-      if (document.fullscreenElement === mapCard) await document.exitFullscreen();
-      else await mapCard.requestFullscreen();
-    } catch (error) {
-      console.warn('Fullscreen unavailable.', error);
-    }
-  });
-  document.addEventListener('fullscreenchange', () => {
-    const active = document.fullscreenElement === mapCard;
-    fullScreen.textContent = active ? 'Exit fullscreen' : 'Fullscreen';
-    fullScreen.setAttribute('aria-pressed',String(active));
-  });
+fullScreen.hidden = false;
+function updateFullscreen() {
+  const active = document.fullscreenElement === mapCard || mapCard.classList.contains('is-expanded');
+  fullScreen.textContent = active ? 'Exit fullscreen' : 'Fullscreen';
+  fullScreen.setAttribute('aria-pressed',String(active));
 }
+function expandViewport(expanded) {
+  mapCard.classList.toggle('is-expanded',expanded);
+  document.body.classList.toggle('map-expanded',expanded);
+  updateFullscreen();
+}
+fullScreen.addEventListener('click', async () => {
+  if (document.fullscreenElement === mapCard) {
+    await document.exitFullscreen();
+  } else if (mapCard.classList.contains('is-expanded')) {
+    expandViewport(false);
+  } else {
+    try {
+      if (!document.fullscreenEnabled || !mapCard.requestFullscreen) throw new Error('Native fullscreen unavailable');
+      await mapCard.requestFullscreen();
+    } catch {
+      expandViewport(true);
+    }
+  }
+});
+document.addEventListener('fullscreenchange',updateFullscreen);
+document.addEventListener('keydown',event => {
+  if (event.key === 'Escape' && mapCard.classList.contains('is-expanded')) expandViewport(false);
+});
 
 function towerMaterial(queueDraw) {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
