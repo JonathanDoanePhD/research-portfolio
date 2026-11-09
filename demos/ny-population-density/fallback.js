@@ -1,5 +1,5 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { densityColor, maxDensity, paletteStops } from './population-colors.js?v=studio-map';
+import { makeDensityColor, maxDensity } from './population-colors.js?v=nyc-ramp';
 import { flatLightPosition, groundShadow } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
@@ -29,15 +29,15 @@ export function startCanvasMap({meta, palette, layerData}) {
   colorStrip.width = 1;
   colorStrip.height = 4096;
   const strip = colorStrip.getContext('2d');
-  let stops;
-  function updatePalette(colors) {
-    stops = paletteStops(colors);
+  let densityColor;
+  function updatePalette(stops) {
+    densityColor = makeDensityColor(stops);
     const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
     for (const [at,color] of stops) gradient.addColorStop(1-at,color);
     strip.fillStyle = gradient;
     strip.fillRect(0,0,1,colorStrip.height);
     if (cells) {
-      tops = Array.from(cells.density,density=>densityColor(density,stops));
+      tops = Array.from(cells.density,densityColor);
       queue();
     }
   }
@@ -45,7 +45,7 @@ export function startCanvasMap({meta, palette, layerData}) {
   let tops;
   let groundLevels;
   let order;
-  updatePalette(palette.colors);
+  updatePalette(palette.stops);
   palette.subscribe(updatePalette);
   const visible = [];
   const screenX = new Float32Array(meta.count);
@@ -404,7 +404,7 @@ export function startCanvasMap({meta, palette, layerData}) {
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    tops = Array.from(cells.density,density=>densityColor(density,stops));
+    tops = Array.from(cells.density,densityColor);
     groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;

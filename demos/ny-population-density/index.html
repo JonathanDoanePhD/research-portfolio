@@ -12,7 +12,7 @@
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=studio-fullscreen').catch(error => {
+    import('./app.js?v=nyc-ramp').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -51,6 +51,7 @@
         <label><input id="show-geography" type="checkbox" disabled> Geographic features</label>
         <label><input id="show-elevation" type="checkbox" disabled> Elevation</label>
         <label>Palette <select id="palette">
+          <option value="nycRelief">NYC relief</option>
           <option value="orangeBlue">Orange / White / Blue</option>
           <option value="greenOrange">Green / White / Orange</option>
           <option value="greenWhite">Green / White</option>

@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=studio-map';
+import { startCanvasMap } from './fallback.js?v=nyc-ramp';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, createPalette, maxDensity } from './population-colors.js?v=studio-map';
+import { colorChannels, createPalette, maxDensity, maxStops } from './population-colors.js?v=nyc-ramp';
 import { studio } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
@@ -54,34 +54,40 @@ document.addEventListener('keydown',event => {
 
 function towerMaterial(queueDraw) {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
-  const toRgb = hex => new THREE.Vector3(...colorChannels(hex).map(v=>v/255));
-  const low = {value:new THREE.Vector3()};
-  const middle = {value:new THREE.Vector3()};
-  const high = {value:new THREE.Vector3()};
-  const midpoint = {value:false};
-  function sync([a,b,c]) {
-    low.value.copy(toRgb(a));
-    middle.value.copy(toRgb(b ?? a));
-    high.value.copy(toRgb(c));
-    midpoint.value = Boolean(b);
+  const positions = {value:new Float32Array(maxStops)};
+  const colors = {value:Array.from({length:maxStops},() => new THREE.Vector3())};
+  const count = {value:0};
+  function sync(stops) {
+    count.value = stops.length;
+    stops.forEach(([position,color],i) => {
+      positions.value[i] = position;
+      colors.value[i].set(...colorChannels(color).map(channel => channel/255));
+    });
   }
-  sync(palette.colors);
-  palette.subscribe(colors => { sync(colors); queueDraw(); });
+  sync(palette.stops);
+  palette.subscribe(stops => { sync(stops); queueDraw(); });
   material.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms,{rampLow:low,rampMiddle:middle,rampHigh:high,hasMidpoint:midpoint});
+    Object.assign(shader.uniforms,{rampPositions:positions,rampColors:colors,rampCount:count});
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float towerDensity;\nvarying float densityAtHeight;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\ndensityAtHeight = towerDensity * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         varying float densityAtHeight;
-        uniform vec3 rampLow, rampMiddle, rampHigh;
-        uniform bool hasMidpoint;
+        uniform float rampPositions[${maxStops}];
+        uniform vec3 rampColors[${maxStops}];
+        uniform int rampCount;
         vec3 populationGradient(float d) {
           float t = clamp(d / ${maxDensity.toFixed(6)}, 0.0, 1.0);
-          vec3 c = mix(rampLow, rampHigh, t);
-          if (hasMidpoint) {
-            c = t <= 0.5 ? mix(rampLow, rampMiddle, 2.0*t) : mix(rampMiddle, rampHigh, 2.0*t-1.0);
+          vec3 c = rampColors[0];
+          for (int i=1; i<${maxStops}; i++) {
+            if (i >= rampCount) break;
+            if (t <= rampPositions[i]) {
+              float weight = (t-rampPositions[i-1])/(rampPositions[i]-rampPositions[i-1]);
+              c = mix(rampColors[i-1], rampColors[i], weight);
+              break;
+            }
+            c = rampColors[i];
           }
           return mix(c/12.92, pow((c+0.055)/1.055, vec3(2.4)), step(vec3(0.04045),c));
         }`)
