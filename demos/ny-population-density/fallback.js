@@ -10,8 +10,11 @@ const fmt = new Intl.NumberFormat('en-US');
 export function startCanvasMap({meta, layerData}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Canvas is unavailable.');
+  const display = canvas.getContext('2d');
+  // Keep the last complete image on screen until terrain, shadows and towers are all drawn.
+  const frameBuffer = document.createElement('canvas');
+  const context = frameBuffer.getContext('2d');
+  if (!display || !context) throw new Error('Canvas is unavailable.');
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-label', 'New York population map. Arrow keys pan. Plus and minus zoom.');
   stage.prepend(canvas);
@@ -26,6 +29,14 @@ export function startCanvasMap({meta, layerData}) {
     labels: document.querySelector('#labels'),
     tip: document.querySelector('#tip'),
   };
+  const towerRamp = document.createElement('canvas');
+  towerRamp.width = 1;
+  towerRamp.height = 4096;
+  const rampContext = towerRamp.getContext('2d');
+  const ramp = rampContext.createLinearGradient(0,towerRamp.height,0,0);
+  for (const [at,color] of populationStops) ramp.addColorStop(at,color);
+  rampContext.fillStyle = ramp;
+  rampContext.fillRect(0,0,1,towerRamp.height);
   let cells;
   let tops;
   let groundLevels;
@@ -192,10 +203,11 @@ export function startCanvasMap({meta, layerData}) {
     const resolution = Math.min(devicePixelRatio, 1.5);
     const pixelWidth = Math.round(width * resolution);
     const pixelHeight = Math.round(tall * resolution);
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-      canvas.width = pixelWidth;
-      canvas.height = pixelHeight;
+    if (frameBuffer.width !== pixelWidth || frameBuffer.height !== pixelHeight) {
+      frameBuffer.width = pixelWidth;
+      frameBuffer.height = pixelHeight;
     }
+    context.globalAlpha = 1;
     context.setTransform(resolution, 0, 0, resolution, 0, 0);
     context.clearRect(0, 0, width, tall);
     scale = measure() * zoom;
@@ -230,19 +242,16 @@ export function startCanvasMap({meta, layerData}) {
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
+      if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       if (y - top > .8) {
         const fraction = cells.colorFraction[i];
-        const gradient = context.createLinearGradient(0,y,0,top);
-        for (const [at,color] of populationStops) {
-          if (at >= fraction) break;
-          gradient.addColorStop(at/fraction,color);
-        }
-        gradient.addColorStop(1,tops[i]);
-        context.fillStyle = gradient;
-        context.fillRect(x-radius,top,radius*2,y-top);
-        lastColor = null;
+        const rampFraction = Math.min(1,fraction);
+        const sourceHeight = rampFraction * towerRamp.height;
+        const rampTop = y - (y-top) * (rampFraction/fraction);
+        if (rampTop > top) context.fillRect(x-radius,top,radius*2,rampTop-top);
+        context.drawImage(towerRamp,0,towerRamp.height-sourceHeight,1,sourceHeight,
+                          x-radius,rampTop,radius*2,y-rampTop);
       }
-      if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       const capHeight = Math.max(.85, 2 * radius * tiltSin);
       if (radius < 1.6) {
         context.fillRect(x-radius, top-capHeight/2, radius*2, capHeight);
@@ -269,6 +278,13 @@ export function startCanvasMap({meta, layerData}) {
       }
     }
     context.globalAlpha = 1;
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
+    display.globalCompositeOperation = 'copy';
+    display.drawImage(frameBuffer,0,0);
+
     const surfaceAt = (x,z) => overlays.showElevation ? groundHeight(terrain,x,z) : 0;
     if (occlusion) overlays.render((x,z) => {
       const y = surfaceAt(x,z)+.08;

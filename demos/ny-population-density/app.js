@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=terrain-base';
+import { startCanvasMap } from './fallback.js?v=complete-frames';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
 import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=green-base';
 import { studio } from './studio-light.js?v=green-base';
