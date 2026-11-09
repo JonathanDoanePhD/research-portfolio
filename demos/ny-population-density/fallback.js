@@ -1,6 +1,6 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { populationColor, populationStops } from './population-colors.js?v=red-at-30k';
-import { flatLightPosition, groundShadow } from './studio-light.js';
+import { populationColor, populationStops } from './population-colors.js?v=green-base';
+import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 
@@ -205,8 +205,8 @@ export function startCanvasMap({meta, layerData}) {
       surface?.triangles.sort((a,b) => (a.x-b.x)*sin + (a.z-b.z)*cos);
       lastAngle = angle;
     }
-    outline(-4, '#b58d74');
-    outline(0, '#edddc8');
+    outline(-4, '#152b21');
+    outline(0, '#254634');
     drawTerrain(width,tall);
 
     const multiplier = Number(controls.height.value) / 100;

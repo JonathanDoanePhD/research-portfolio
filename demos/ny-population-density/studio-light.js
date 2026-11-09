@@ -1,5 +1,5 @@
 // Fixed point in view coordinates relative to the viewport center.
-export const studio = {x:-330,y:120,z:600};
+export const studio = {x:-610,y:1180,z:470};
 
 export function flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos) {
   const toward = studio.z*tiltCos-studio.y*tiltSin;

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=red-at-30k';
+import { startCanvasMap } from './fallback.js?v=green-base';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=red-at-30k';
-import { studio } from './studio-light.js';
+import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=green-base';
+import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 
@@ -162,8 +162,8 @@ function wireGranularity(levels, grids, renderGrid) {
 
 function stateBase(polygons) {
   const material = [
-    new THREE.MeshLambertMaterial({color: 0xf0dec9}),
-    new THREE.MeshLambertMaterial({color: 0xaa806a}),
+    new THREE.MeshLambertMaterial({color: 0x254634}),
+    new THREE.MeshLambertMaterial({color: 0x152b21}),
   ];
   const group = new THREE.Group();
   for (const [outer, ...holes] of polygons) {
@@ -183,7 +183,7 @@ function stateBase(polygons) {
 async function start() {
   const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json?v=terrain-layers', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=green-base', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
@@ -208,7 +208,7 @@ async function start() {
 
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 1.5));
-  const sun = new THREE.SpotLight(0xffffff,2.4,0,Math.PI/2.45,.24,0);
+  const sun = new THREE.SpotLight(0xffffff,2.4,0,.65,.24,0);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.near = 12;

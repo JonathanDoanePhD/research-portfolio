@@ -4,8 +4,7 @@ export const maxColorPopulation = 30000;
 
 const brackets = [
   [0, '0', '#38815e'],
-  [2000, '2k', '#d97732'],
-  [5000, '5k', '#d97732'],
+  [3000, '3k', '#d97732'],
   [maxColorPopulation, '30k+', '#ab2940'],
 ];
 
