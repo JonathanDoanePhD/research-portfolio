@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=terrain-layers';
-import { createLayers, readLayers } from './layers.js';
+import { startCanvasMap } from './fallback.js?v=physical-relief';
+import { createLayers, readLayers } from './layers.js?v=physical-relief';
+import { stops } from './population-colors.js';
+import { groundHeight } from './terrain.js';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -14,28 +16,42 @@ const view3D = document.querySelector('#view-3d');
 const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
-const densityBands = [
-  {limit:10, color:0xedc5a2, label:'<10'},
-  {limit:100, color:0xf39655, label:'10–99'},
-  {limit:500, color:0xe86f37, label:'100–499'},
-  {limit:1000, color:0xbe4d28, label:'500–999'},
-  {limit:2500, color:0x9bdcff, label:'1,000–2,499'},
-  {limit:10000, color:0x53b7e6, label:'2,500–9,999'},
-  {limit:30000, color:0x277cb6, label:'10,000–29,999'},
-  {limit:Infinity, color:0x123f69, label:'30,000+'},
-];
-const palette = densityBands.map(band => band.color);
-const colorBand = density => densityBands.findIndex(band => density < band.limit);
 const towerHeight = density => density * (112 / 120000);
 const sunPosition = {x:-350, y:600, z:-350};
 
 const legend = document.querySelector('#density-bands');
-for (const {color, label} of densityBands) {
+legend.style.setProperty('--density-gradient', `linear-gradient(90deg,${stops.map(([,color]) => color).join(',')})`);
+for (const [density] of stops) {
   const entry = document.createElement('li');
-  const swatch = document.createElement('i');
-  swatch.style.setProperty('--swatch', '#' + color.toString(16).padStart(6, '0'));
-  entry.append(swatch, label);
+  entry.textContent = density >= 1000 ? `${density > 100000 ? Math.round(density/1000) : density/1000}k` : String(density);
+  entry.title = `${number.format(Math.round(density))} people per square mile`;
   legend.append(entry);
+}
+
+function towerMaterial() {
+  const material = new THREE.MeshLambertMaterial({flatShading:true});
+  const color = hex => {
+    const c = new THREE.Color(hex);
+    return `vec3(${[c.r,c.g,c.b].map(v => v.toFixed(7)).join(',')})`;
+  };
+  const gradient = stops.slice(1).map(([to,end],i) => {
+    const [from,start] = stops[i];
+    return `if (d <= ${to.toFixed(6)}) return mix(${color(start)}, ${color(end)}, (d-${from.toFixed(6)})/${(to-from).toFixed(6)});`;
+  }).join('\n');
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float towerDensity;\nvarying float densityAtHeight;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\ndensityAtHeight = towerDensity * (position.y + 0.5);');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        varying float densityAtHeight;
+        vec3 populationGradient(float d) {
+          ${gradient}
+          return ${color(stops.at(-1)[1])};
+        }`)
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= populationGradient(densityAtHeight);');
+  };
+  return material;
 }
 
 async function checkedFetch(path) {
@@ -141,7 +157,7 @@ async function start() {
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand, sunPosition, layerData}));
+    wireGranularity(levels, grids, startCanvasMap({meta, sunPosition, layerData}));
     return;
   }
   renderer.shadowMap.enabled = true;
@@ -159,7 +175,7 @@ async function start() {
   const sun = new THREE.DirectionalLight(0xffffff, 1.95);
   sun.position.set(sunPosition.x, sunPosition.y, sunPosition.z);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(4096, 4096);
+  sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, {left:-565, right:565, top:565, bottom:-565, near:10, far:1550});
   sun.shadow.camera.updateProjectionMatrix();
   sun.shadow.normalBias = 0.08;
@@ -181,8 +197,9 @@ async function start() {
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   prism.rotateY(-Math.PI / 2);
-  const material = new THREE.MeshLambertMaterial({ flatShading: true });
-  const towers = new THREE.InstancedMesh(prism, material, meta.count);
+  const towerDensities = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
+  prism.setAttribute('towerDensity', towerDensities);
+  const towers = new THREE.InstancedMesh(prism, towerMaterial(), meta.count);
   towers.frustumCulled = false;
   towers.castShadow = true;
   towers.receiveShadow = true;
@@ -196,7 +213,6 @@ async function start() {
   picker.frustumCulled = false;
   picker.instanceMatrix = towers.instanceMatrix;
   pickScene.add(picker);
-  const paint = palette.map(hex => new THREE.Color(hex));
   const idColor = new THREE.Color();
   for (let i = 0; i < meta.count; i++) {
     const id = i + 1;
@@ -205,6 +221,7 @@ async function start() {
 
   const matrix = new THREE.Matrix4();
   let multiplier = 1;
+  let groundLevels;
   function updateHeights() {
     for (let i = 0; i < cells.count; i++) {
       const h = Math.max(0.0001, cells.elevation[i] * multiplier);
@@ -212,7 +229,8 @@ async function start() {
       const a = cells.angle[i];
       const c = r * Math.cos(a);
       const s = r * Math.sin(a);
-      matrix.set(c, 0, s, cells.x[i], 0, h, 0, h / 2,
+      const base = terrainWasVisible ? groundLevels[i] : 0;
+      matrix.set(c, 0, s, cells.x[i], 0, h, 0, base + h / 2,
                  -s, 0, c, cells.z[i], 0, 0, 0, 1);
       towers.setMatrixAt(i, matrix);
     }
@@ -242,48 +260,62 @@ async function start() {
   const point = new THREE.Vector3();
   let frame;
   let terrainMesh;
-  let terrainColors;
   let terrainWasVisible = false;
+  let lightRightX;
+  let lightRightZ;
   const overlays = createLayers(layerData, queueDraw);
   if (overlays.terrain) {
-    const {image, left, top, width, height: depth} = overlays.terrain;
+    const {image,left,top,width,height:depth,cols,rows,heights} = overlays.terrain;
     const texture = new THREE.Texture(image);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
-    terrainMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(width, depth),
-      new THREE.MeshLambertMaterial({map:texture, alphaTest:.48})
-    );
-    terrainMesh.position.set(left + width/2, -.22, top + depth/2);
+    const geometry = new THREE.PlaneGeometry(width, depth, cols-1, rows-1);
+    const vertices = geometry.getAttribute('position');
+    for (let i = 0; i < heights.length; i++) vertices.setZ(i, heights[i]);
+    geometry.computeVertexNormals();
+    terrainMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({map:texture, alphaTest:.48}));
+    terrainMesh.position.set(left + width/2, -.08, top + depth/2);
     terrainMesh.rotation.x = -Math.PI/2;
     terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
     terrainMesh.visible = false;
     scene.add(terrainMesh);
+  }
 
-    const pixels = document.createElement('canvas');
-    pixels.width = image.naturalWidth;
-    pixels.height = image.naturalHeight;
-    const context = pixels.getContext('2d', {willReadFrequently:true});
-    context.drawImage(image, 0, 0);
-    terrainColors = context.getImageData(0, 0, pixels.width, pixels.height);
+  function surfaceAt(x,z) {
+    return terrainWasVisible ? groundHeight(overlays.terrain,x,z) : 0;
   }
 
   function project(x, z) {
-    point.set(x, 0, z).project(camera);
+    point.set(x, surfaceAt(x,z), z).project(camera);
     return [(point.x+1)*stage.clientWidth/2, (1-point.y)*stage.clientHeight/2];
   }
+
+  function updateLight() {
+    camera.updateMatrixWorld();
+    const [rightX, , rightZ] = camera.matrixWorld.elements;
+    if (lightRightX !== undefined && Math.hypot(rightX-lightRightX,rightZ-lightRightZ) < .0001) return;
+    lightRightX = rightX;
+    lightRightZ = rightZ;
+    sun.position.set(sunPosition.x*rightX - sunPosition.z*rightZ,
+                     sunPosition.y,
+                     sunPosition.x*rightZ + sunPosition.z*rightX);
+    renderer.shadowMap.needsUpdate = true;
+  }
+
   function queueDraw() {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = null;
       if (terrainMesh && terrainWasVisible !== overlays.showElevation) {
         terrainWasVisible = terrainMesh.visible = overlays.showElevation;
-        updateColors();
+        updateHeights();
       }
+      updateLight();
       renderer.render(scene, camera);
       overlays.render(project);
       for (const place of meta.places) {
-        point.set(place.x, flat ? 0 : place.peak * multiplier + 2, place.z).project(camera);
+        point.set(place.x, surfaceAt(place.x,place.z) + (flat ? 0 : place.peak * multiplier + 2), place.z).project(camera);
         const x = (point.x + 1) * stage.clientWidth / 2;
         const y = (1 - point.y) * stage.clientHeight / 2;
         place.label.hidden = Math.abs(point.x) > .91 || Math.abs(point.y) > .90 ||
@@ -402,31 +434,12 @@ async function start() {
     pointerStart = null;
   });
 
-  function updateColors() {
-    const blend = new THREE.Color();
-    const terrain = overlays.terrain;
-    for (let i = 0; i < cells.count; i++) {
-      const band = colorBand(cells.density[i]);
-      blend.copy(paint[band]);
-      if (terrainWasVisible && terrainColors && band < 4) {
-        const {data, width, height: depth} = terrainColors;
-        const x = Math.floor((cells.x[i]-terrain.left) * width / terrain.width);
-        const z = Math.floor((cells.z[i]-terrain.top) * depth / terrain.height);
-        const offset = (z*width+x)*4;
-        if (x >= 0 && x < width && z >= 0 && z < depth && data[offset+3] > 128) {
-          blend.setRGB(data[offset]/255, data[offset+1]/255, data[offset+2]/255, THREE.SRGBColorSpace);
-          blend.lerp(paint[band], [.18,.28,.50,.68][band]);
-        }
-      }
-      towers.setColorAt(i, blend);
-    }
-    towers.instanceColor.needsUpdate = true;
-  }
-
   function updateCells(grid) {
     cells = grid;
     towers.count = picker.count = cells.count;
-    updateColors();
+    towerDensities.array.set(cells.density);
+    towerDensities.needsUpdate = true;
+    groundLevels = cells.x.map((x,i) => groundHeight(overlays.terrain,x,cells.z[i]));
     for (const place of meta.places) {
       place.peak = 0;
       const range = place.name === 'New York City' ? 13 : 7;

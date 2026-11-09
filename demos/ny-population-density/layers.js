@@ -1,3 +1,5 @@
+import { loadTerrain } from './terrain.js';
+
 const svgNS = 'http://www.w3.org/2000/svg';
 const svgNode = name => document.createElementNS(svgNS, name);
 
@@ -6,13 +8,10 @@ export async function readLayers() {
     const response = await fetch('data/geography.json');
     if (!response.ok) throw new Error(`Could not load geographic overlays (HTTP ${response.status}).`);
     const data = await response.json();
-    const image = new Image();
-    image.src = 'data/elevation.webp';
     try {
-      await image.decode();
-      data.elevation.image = image;
+      data.elevation = await loadTerrain(data.elevation);
     } catch (error) {
-      console.warn('Elevation image unavailable.', error);
+      console.warn('Elevation data unavailable.', error);
     }
     return data;
   } catch (error) {

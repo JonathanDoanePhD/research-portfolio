@@ -1,6 +1,8 @@
 """Build map overlays from the 3DEP GeoTIFF and the projected geography extracts."""
+import gzip
 import json
 from pathlib import Path
+import struct
 import sys
 
 import numpy as np
@@ -60,6 +62,13 @@ def build_elevation(source, output, outline):
     rgb *= np.clip(.80 + .20 * light, .66, 1.19)[...,None]
     rgba = np.dstack((np.clip(rgb, 0, 255).astype(np.uint8), alpha))
     Image.fromarray(rgba).save(output / "elevation.webp", quality=89, method=6)
+    # Sample terrain vertices about 4 km apart for interactive rendering.
+    cols, rows = 171, 131
+    x = np.linspace(0, raster.RasterXSize-1, cols).round().astype(int)
+    y = np.linspace(0, raster.RasterYSize-1, rows).round().astype(int)
+    heights = dem[np.ix_(y, x)].round().astype("<u2")
+    payload = struct.pack("<HH", cols, rows) + heights.tobytes()
+    (output / "elevation-grid.bin").write_bytes(gzip.compress(payload, mtime=0))
     width = raster.RasterXSize * transform[1] / 1000
     height = raster.RasterYSize * -transform[5] / 1000
     print(f"Elevation coverage: {np.count_nonzero(alpha):,} cells, range {dem[alpha>0].min():.0f} to {dem[alpha>0].max():.0f} m")

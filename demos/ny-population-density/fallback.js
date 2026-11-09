@@ -1,8 +1,10 @@
-import { createLayers } from './layers.js';
+import { createLayers } from './layers.js?v=physical-relief';
+import { densityColor, maxDensity, stops } from './population-colors.js';
+import { groundHeight } from './terrain.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData}) {
+export function startCanvasMap({meta, sunPosition, layerData}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -21,15 +23,20 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
     labels: document.querySelector('#labels'),
     tip: document.querySelector('#tip'),
   };
-  const tops = palette.map(value => '#' + value.toString(16).padStart(6, '0'));
-  const sides = palette.map(color => {
-    const channels = [16, 8, 0].map(shift => Math.round(((color >>> shift) & 255) * .74));
-    return `rgb(${channels.join(',')})`;
-  });
+  const colorStrip = document.createElement('canvas');
+  colorStrip.width = 1;
+  colorStrip.height = 4096;
+  const strip = colorStrip.getContext('2d');
+  const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
+  // Draw the common scale once, then crop it at each tower's own density.
+  for (const [density,color] of stops) gradient.addColorStop(1-density/maxDensity,color);
+  strip.fillStyle = gradient;
+  strip.fillRect(0,0,1,colorStrip.height);
   const shadowX = -sunPosition.x / sunPosition.y;
   const shadowZ = -sunPosition.z / sunPosition.y;
   let cells;
-  let bands;
+  let tops;
+  let groundLevels;
   let order;
   const visible = [];
   const screenX = new Float32Array(meta.count);
@@ -48,6 +55,41 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
   let lastAngle;
   let cos, sin, tiltSin, tiltCos;
   const overlays = createLayers(layerData, queue);
+  const terrain = overlays.terrain;
+  const surface = terrain ? terrainTriangles() : null;
+
+  function terrainTriangles() {
+    const {image,left,top,width,height,cols,rows,heights} = terrain;
+    const texture = document.createElement('canvas');
+    texture.width = image.naturalWidth;
+    texture.height = image.naturalHeight;
+    const ctx = texture.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(image,0,0);
+    const pixels = ctx.getImageData(0,0,texture.width,texture.height).data;
+    const points = Array.from(heights, (y,i) => ({
+      x:left+(i%cols)*width/(cols-1),
+      z:top+Math.floor(i/cols)*height/(rows-1),
+      y,
+    }));
+    const triangles = [];
+    function add(a,b,c,u,v) {
+      const px = Math.floor(u*texture.width/(cols-1));
+      const py = Math.floor(v*texture.height/(rows-1));
+      const i = (py*texture.width+px)*4;
+      if (pixels[i+3] < 128) return;
+      triangles.push({a,b,c,x:(points[a].x+points[b].x+points[c].x)/3,
+        z:(points[a].z+points[b].z+points[c].z)/3,
+        color:`rgb(${pixels[i]},${pixels[i+1]},${pixels[i+2]})`});
+    }
+    for (let j=0;j<rows-1;j++) {
+      for (let i=0;i<cols-1;i++) {
+        const a=j*cols+i;
+        add(a,a+cols,a+1,i+1/3,j+1/3);
+        add(a+cols,a+cols+1,a+1,i+2/3,j+2/3);
+      }
+    }
+    return {points,triangles};
+  }
 
   for (const place of meta.places) {
     place.label = document.createElement('span');
@@ -91,21 +133,42 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
     context.fill('evenodd');
   }
 
-  function drawTerrain() {
-    if (!overlays.showElevation || !overlays.terrain) return;
-    const {image,left,top,width,height} = overlays.terrain;
-    const [x,y] = project(left, top, 0);
-    context.save();
-    context.transform(cos*scale, sin*tiltSin*scale, -sin*scale, cos*tiltSin*scale, x, y);
-    context.drawImage(image, 0, 0, width, height);
-    context.restore();
+  function drawTerrain(width,tall) {
+    if (!overlays.showElevation || !surface) return;
+    if (flat) {
+      const {image,left,top,width:terrainWidth,height:terrainHeight} = terrain;
+      const [x,y] = project(left,top,0);
+      context.save();
+      context.transform(cos*scale, sin*tiltSin*scale, -sin*scale, cos*tiltSin*scale, x, y);
+      context.drawImage(image,0,0,terrainWidth,terrainHeight);
+      context.restore();
+      return;
+    }
+    const points = surface.points.map(({x,z,y}) => project(x,z,y));
+    for (const triangle of surface.triangles) {
+      const [ax,ay] = points[triangle.a];
+      const [bx,by] = points[triangle.b];
+      const [cx,cy] = points[triangle.c];
+      if (Math.max(ax,bx,cx)<0 || Math.min(ax,bx,cx)>width ||
+          Math.max(ay,by,cy)<0 || Math.min(ay,by,cy)>tall) continue;
+      context.fillStyle = triangle.color;
+      context.beginPath();
+      context.moveTo(ax,ay);
+      context.lineTo(bx,by);
+      context.lineTo(cx,cy);
+      context.closePath();
+      context.fill();
+      context.strokeStyle = triangle.color;
+      context.lineWidth = .5;
+      context.stroke();
+    }
   }
 
   function drawShadows(width, tall, multiplier) {
-    if (multiplier === 0) return;
-    // Project the horizontal cast direction from map coordinates into the current view.
-    const shiftX = (shadowX*cos - shadowZ*sin) * scale;
-    const shiftY = (shadowX*sin + shadowZ*cos) * tiltSin * scale;
+    if (multiplier === 0 || overlays.showElevation) return;
+    // On the flat ground plane the view-fixed light has an exact projected cast vector.
+    const shiftX = shadowX * scale;
+    const shiftY = shadowZ * tiltSin * scale;
     const length = Math.hypot(shiftX, shiftY);
     const minHeight = .65 / length;
     const normalX = -shiftY / length;
@@ -155,11 +218,12 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
     tiltCos = flat ? 0 : Math.cos(incline);
     if (lastAngle !== angle) {
       order.sort((a,b) => (cells.x[a]-cells.x[b])*sin + (cells.z[a]-cells.z[b])*cos);
+      surface?.triangles.sort((a,b) => (a.x-b.x)*sin + (a.z-b.z)*cos);
       lastAngle = angle;
     }
     outline(-4, '#b58d74');
     outline(0, '#edddc8');
-    drawTerrain();
+    drawTerrain(width,tall);
 
     const multiplier = Number(controls.height.value) / 100;
     drawShadows(width, tall, multiplier);
@@ -170,17 +234,18 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
       const dz = cells.z[i] - centerZ;
       const x = width / 2 + (dx*cos - dz*sin) * scale;
       if (x < -30 || x > width + 30) continue;
-      const y = tall / 2 + (dx*sin + dz*cos) * tiltSin * scale;
+      const base = overlays.showElevation ? groundLevels[i] : 0;
+      const y = tall / 2 + ((dx*sin + dz*cos) * tiltSin - base*tiltCos) * scale;
       const top = y - cells.elevation[i] * multiplier * tiltCos * scale;
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
-      const band = bands[i];
-      context.globalAlpha = overlays.showElevation && band < 4 ? [.18,.28,.50,.68][band] : 1;
+      context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
       if (y - top > .8) {
-        if (lastColor !== sides[band]) context.fillStyle = lastColor = sides[band];
-        context.fillRect(x-radius, top, radius*2, y-top);
+        const sourceHeight = colorStrip.height * Math.min(1,cells.density[i]/maxDensity);
+        context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
+                          x-radius,top,radius*2,y-top);
       }
-      if (lastColor !== tops[band]) context.fillStyle = lastColor = tops[band];
+      if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       const capHeight = Math.max(.85, 2 * radius * tiltSin);
       if (radius < 1.6) {
         context.fillRect(x-radius, top-capHeight/2, radius*2, capHeight);
@@ -203,9 +268,10 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
       visible.push(i);
     }
     context.globalAlpha = 1;
-    overlays.render((x,z) => project(x,z,0));
+    const surfaceAt = (x,z) => overlays.showElevation ? groundHeight(terrain,x,z) : 0;
+    overlays.render((x,z) => project(x,z,surfaceAt(x,z)));
     for (const place of meta.places) {
-      const [x, y] = project(place.x, place.z, (place.peak + 2) * multiplier);
+      const [x, y] = project(place.x, place.z, surfaceAt(place.x,place.z) + (place.peak + 2) * multiplier);
       place.label.hidden = x < 28 || x > width - 28 || y < 22 || y > tall - 25 ||
         (width < 530 && !selected && ['Rochester','Syracuse','Albany'].includes(place.name));
       place.label.style.left = `${x}px`;
@@ -326,7 +392,8 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    bands = Uint8Array.from(cells.density, colorBand);
+    tops = Array.from(cells.density, densityColor);
+    groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;
     for (const place of meta.places) {
