@@ -1,5 +1,5 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { populationColor, populationStops } from './population-colors.js?v=six-color-stops';
+import { populationColor, populationStops } from './population-colors.js?v=red-at-30k';
 import { flatLightPosition, groundShadow } from './studio-light.js';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';

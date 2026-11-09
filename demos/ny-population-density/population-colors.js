@@ -4,11 +4,9 @@ export const maxColorPopulation = 30000;
 
 const brackets = [
   [0, '0', '#38815e'],
-  [1000, '1k', '#ffffff'],
   [2000, '2k', '#d97732'],
   [5000, '5k', '#d97732'],
-  [20000, '20k', '#ab2940'],
-  [maxColorPopulation, '30k+', '#ffffff'],
+  [maxColorPopulation, '30k+', '#ab2940'],
 ];
 
 export const populationStops = brackets.map(([population,,color]) => [population/maxColorPopulation,color]);
