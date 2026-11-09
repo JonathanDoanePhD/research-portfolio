@@ -298,6 +298,8 @@ async function start() {
   const point = new THREE.Vector3();
   let frame;
   let terrainMesh;
+  let flatTerrain;
+  let raisedTerrain;
   let reliefWasEnabled = false;
   const previousLight = new THREE.Vector3(Infinity,Infinity,Infinity);
   const lightPoint = new THREE.Vector3();
@@ -305,12 +307,18 @@ async function start() {
   const projectedTop = new THREE.Vector3();
   const overlays = createLayers(layerData, queueDraw);
   if (overlays.terrain) {
-    const {image,left,top,width,height:depth,cols,rows} = overlays.terrain;
+    const {image,left,top,width,height:depth,cols,rows,heights} = overlays.terrain;
     const texture = new THREE.Texture(image);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
-    const geometry = new THREE.PlaneGeometry(width, depth, cols-1, rows-1);
-    terrainMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({map:texture, alphaTest:.48}));
+    // Use separate geometry buffers. The shadow pass can cache the raised
+    // buffer through the next render, even after the ground switches to flat.
+    flatTerrain = new THREE.PlaneGeometry(width, depth);
+    raisedTerrain = new THREE.PlaneGeometry(width, depth, cols-1, rows-1);
+    const vertices = raisedTerrain.getAttribute('position');
+    for (let i=0;i<heights.length;i++) vertices.setZ(i,heights[i]);
+    raisedTerrain.computeVertexNormals();
+    terrainMesh = new THREE.Mesh(flatTerrain, new THREE.MeshLambertMaterial({map:texture, alphaTest:.48}));
     terrainMesh.position.set(left + width/2, -.08, top + depth/2);
     terrainMesh.rotation.x = -Math.PI/2;
     terrainMesh.receiveShadow = true;
@@ -365,13 +373,7 @@ async function start() {
       frame = null;
       if (terrainMesh && reliefWasEnabled !== overlays.showElevation) {
         reliefWasEnabled = terrainMesh.castShadow = overlays.showElevation;
-        const geometry = terrainMesh.geometry;
-        const vertices = geometry.getAttribute('position');
-        const {heights} = overlays.terrain;
-        for (let i=0;i<heights.length;i++) vertices.setZ(i,reliefWasEnabled ? heights[i] : 0);
-        vertices.needsUpdate = true;
-        geometry.computeVertexNormals();
-        geometry.computeBoundingSphere();
+        terrainMesh.geometry = reliefWasEnabled ? raisedTerrain : flatTerrain;
         updateHeights();
       }
       updateLight();
