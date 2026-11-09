@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { startCanvasMap } from './fallback.js';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -72,58 +73,13 @@ function stateBase(polygons) {
   return group;
 }
 
-function drawFallback(meta, cells) {
-  const canvas = document.createElement('canvas');
-  canvas.setAttribute('aria-label', 'Top-down population density map of New York');
-  canvas.setAttribute('role', 'img');
-  canvas.style.cursor = 'default';
-  stage.prepend(canvas);
-  const context = canvas.getContext('2d');
-  const colors = palette.map(color => '#' + color.toString(16).padStart(6, '0'));
-  function draw() {
-    const width = stage.clientWidth;
-    const tall = stage.clientHeight;
-    const resolution = Math.min(devicePixelRatio, 2);
-    canvas.width = width * resolution;
-    canvas.height = tall * resolution;
-    context.scale(resolution, resolution);
-    const scale = Math.min(width / 735, tall / 565);
-    const screenX = x => width / 2 + x * scale;
-    const screenY = z => tall / 2 + z * scale;
-    context.fillStyle = '#edddc8';
-    context.strokeStyle = '#b6987d';
-    context.beginPath();
-    for (const polygon of meta.outline) {
-      for (const ring of polygon) {
-        ring.forEach(([x, y], index) => context[index ? 'lineTo' : 'moveTo'](screenX(x), screenY(-y)));
-        context.closePath();
-      }
-    }
-    context.fill('evenodd');
-    context.stroke();
-    for (let band = 0; band < colors.length; band++) {
-      context.fillStyle = colors[band];
-      for (let i = 0; i < meta.count; i++) {
-        if (colorBand(cells.density[i]) !== band) continue;
-        const dot = Math.max(.85, cells.radius[i] * scale * 1.8);
-        context.fillRect(screenX(cells.x[i]) - dot / 2, screenY(cells.z[i]) - dot / 2, dot, dot);
-      }
-    }
-  }
-  new ResizeObserver(draw).observe(stage);
-  draw();
-  status.hidden = true;
-  hint.textContent = 'Top-down preview · 3D requires WebGL';
-  stage.dataset.ready = 'fallback';
-}
-
 async function start() {
   const { meta, cells } = await readGrid();
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    drawFallback(meta, cells);
+    startCanvasMap({meta, cells, palette, colorBand});
     return;
   }
   renderer.setClearColor(0x000000, 0);
