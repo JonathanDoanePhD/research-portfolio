@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population Density | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=northwest-light">
+  <link rel="stylesheet" href="style.css?v=terrain-layers">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=northwest-light').catch(error => {
+    import('./app.js?v=terrain-layers').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -46,7 +46,17 @@
         </label>
         <button id="reset" class="reset" type="button" disabled><span aria-hidden="true">↺</span> Reset</button>
       </div>
+      <div class="layer-controls" role="group" aria-label="Map overlays">
+        <label><input id="show-geography" type="checkbox" disabled> Geographic features</label>
+        <label><input id="show-elevation" type="checkbox" disabled> Elevation</label>
+      </div>
       <div id="stage">
+        <svg id="geographic-overlay" aria-hidden="true"></svg>
+        <div class="elevation-legend" id="elevation-legend" hidden>
+          <strong>Ground elevation (m)</strong>
+          <div id="elevation-ramp"></div>
+          <div id="elevation-ticks"></div>
+        </div>
         <div id="status" role="status">Loading New York’s population grid…</div>
         <div id="labels" aria-hidden="true"></div>
         <div id="tip" class="tooltip" hidden></div>
@@ -71,7 +81,8 @@
       <summary>How to read this map</summary>
       <p>Each tower represents one hexagon. Color shows the density range, and height is directly proportional to density. Move Granularity to the right to group cells into larger hexagons. Hover or tap a cell for its estimated density and population.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
-      <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>.</p>
+      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries, and <strong>Elevation</strong> to compare shaded terrain with the density towers. Elevation and density can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
+      <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>
     </details>
   </main>
   <footer class="wrap footer"><span>Jonathan D. Doane</span><a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density">Project source ↗</a></footer>

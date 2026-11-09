@@ -1,6 +1,8 @@
+import { createLayers } from './layers.js';
+
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
+export function startCanvasMap({meta, palette, colorBand, sunPosition, layerData}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -45,6 +47,7 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
   let frame;
   let lastAngle;
   let cos, sin, tiltSin, tiltCos;
+  const overlays = createLayers(layerData, queue);
 
   for (const place of meta.places) {
     place.label = document.createElement('span');
@@ -86,6 +89,16 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
     }
     context.fillStyle = fill;
     context.fill('evenodd');
+  }
+
+  function drawTerrain() {
+    if (!overlays.showElevation || !overlays.terrain) return;
+    const {image,left,top,width,height} = overlays.terrain;
+    const [x,y] = project(left, top, 0);
+    context.save();
+    context.transform(cos*scale, sin*tiltSin*scale, -sin*scale, cos*tiltSin*scale, x, y);
+    context.drawImage(image, 0, 0, width, height);
+    context.restore();
   }
 
   function drawShadows(width, tall, multiplier) {
@@ -146,6 +159,7 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
     }
     outline(-4, '#b58d74');
     outline(0, '#edddc8');
+    drawTerrain();
 
     const multiplier = Number(controls.height.value) / 100;
     drawShadows(width, tall, multiplier);
@@ -161,6 +175,7 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       const band = bands[i];
+      context.globalAlpha = overlays.showElevation && band < 4 ? [.18,.28,.50,.68][band] : 1;
       if (y - top > .8) {
         if (lastColor !== sides[band]) context.fillStyle = lastColor = sides[band];
         context.fillRect(x-radius, top, radius*2, y-top);
@@ -187,6 +202,8 @@ export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
       radii[i] = radius;
       visible.push(i);
     }
+    context.globalAlpha = 1;
+    overlays.render((x,z) => project(x,z,0));
     for (const place of meta.places) {
       const [x, y] = project(place.x, place.z, (place.peak + 2) * multiplier);
       place.label.hidden = x < 28 || x > width - 28 || y < 22 || y > tall - 25 ||

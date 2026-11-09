@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=northwest-light';
+import { startCanvasMap } from './fallback.js?v=terrain-layers';
+import { createLayers, readLayers } from './layers.js';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -128,17 +129,19 @@ function stateBase(polygons) {
 }
 
 async function start() {
+  const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=terrain-layers', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
   let cells = grids[0];
+  const layerData = await layerRequest;
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand, sunPosition}));
+    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand, sunPosition, layerData}));
     return;
   }
   renderer.shadowMap.enabled = true;
@@ -238,11 +241,47 @@ async function start() {
 
   const point = new THREE.Vector3();
   let frame;
+  let terrainMesh;
+  let terrainColors;
+  let terrainWasVisible = false;
+  const overlays = createLayers(layerData, queueDraw);
+  if (overlays.terrain) {
+    const {image, left, top, width, height: depth} = overlays.terrain;
+    const texture = new THREE.Texture(image);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    terrainMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, depth),
+      new THREE.MeshLambertMaterial({map:texture, alphaTest:.48})
+    );
+    terrainMesh.position.set(left + width/2, -.22, top + depth/2);
+    terrainMesh.rotation.x = -Math.PI/2;
+    terrainMesh.receiveShadow = true;
+    terrainMesh.visible = false;
+    scene.add(terrainMesh);
+
+    const pixels = document.createElement('canvas');
+    pixels.width = image.naturalWidth;
+    pixels.height = image.naturalHeight;
+    const context = pixels.getContext('2d', {willReadFrequently:true});
+    context.drawImage(image, 0, 0);
+    terrainColors = context.getImageData(0, 0, pixels.width, pixels.height);
+  }
+
+  function project(x, z) {
+    point.set(x, 0, z).project(camera);
+    return [(point.x+1)*stage.clientWidth/2, (1-point.y)*stage.clientHeight/2];
+  }
   function queueDraw() {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = null;
+      if (terrainMesh && terrainWasVisible !== overlays.showElevation) {
+        terrainWasVisible = terrainMesh.visible = overlays.showElevation;
+        updateColors();
+      }
       renderer.render(scene, camera);
+      overlays.render(project);
       for (const place of meta.places) {
         point.set(place.x, flat ? 0 : place.peak * multiplier + 2, place.z).project(camera);
         const x = (point.x + 1) * stage.clientWidth / 2;
@@ -363,11 +402,31 @@ async function start() {
     pointerStart = null;
   });
 
+  function updateColors() {
+    const blend = new THREE.Color();
+    const terrain = overlays.terrain;
+    for (let i = 0; i < cells.count; i++) {
+      const band = colorBand(cells.density[i]);
+      blend.copy(paint[band]);
+      if (terrainWasVisible && terrainColors && band < 4) {
+        const {data, width, height: depth} = terrainColors;
+        const x = Math.floor((cells.x[i]-terrain.left) * width / terrain.width);
+        const z = Math.floor((cells.z[i]-terrain.top) * depth / terrain.height);
+        const offset = (z*width+x)*4;
+        if (x >= 0 && x < width && z >= 0 && z < depth && data[offset+3] > 128) {
+          blend.setRGB(data[offset]/255, data[offset+1]/255, data[offset+2]/255, THREE.SRGBColorSpace);
+          blend.lerp(paint[band], [.18,.28,.50,.68][band]);
+        }
+      }
+      towers.setColorAt(i, blend);
+    }
+    towers.instanceColor.needsUpdate = true;
+  }
+
   function updateCells(grid) {
     cells = grid;
     towers.count = picker.count = cells.count;
-    for (let i = 0; i < cells.count; i++) towers.setColorAt(i, paint[colorBand(cells.density[i])]);
-    towers.instanceColor.needsUpdate = true;
+    updateColors();
     for (const place of meta.places) {
       place.peak = 0;
       const range = place.name === 'New York City' ? 13 : 7;
