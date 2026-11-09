@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=green-base';
-import { createLayers, readLayers } from './layers.js?v=studio-map';
+import { startCanvasMap } from './fallback.js?v=terrain-base';
+import { createLayers, readLayers } from './layers.js?v=terrain-base';
 import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=green-base';
 import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
+import { topDownFrame } from './map-frame.js';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -188,6 +189,7 @@ async function start() {
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
   let cells = grids[0];
+  const overview = topDownFrame(meta.outline);
   const layerData = await layerRequest;
   let renderer;
   try {
@@ -265,7 +267,7 @@ async function start() {
       const a = cells.angle[i];
       const c = r * Math.cos(a);
       const s = r * Math.sin(a);
-      const base = terrainWasVisible ? groundLevels[i] : 0;
+      const base = reliefWasEnabled ? groundLevels[i] : 0;
       matrix.set(c, 0, s, cells.x[i], 0, h, 0, base + h / 2,
                  -s, 0, c, cells.z[i], 0, 0, 0, 1);
       towers.setMatrixAt(i, matrix);
@@ -296,32 +298,27 @@ async function start() {
   const point = new THREE.Vector3();
   let frame;
   let terrainMesh;
-  let terrainWasVisible = false;
+  let reliefWasEnabled = false;
   const previousLight = new THREE.Vector3(Infinity,Infinity,Infinity);
   const lightPoint = new THREE.Vector3();
   const projectedBase = new THREE.Vector3();
   const projectedTop = new THREE.Vector3();
   const overlays = createLayers(layerData, queueDraw);
   if (overlays.terrain) {
-    const {image,left,top,width,height:depth,cols,rows,heights} = overlays.terrain;
+    const {image,left,top,width,height:depth,cols,rows} = overlays.terrain;
     const texture = new THREE.Texture(image);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
     const geometry = new THREE.PlaneGeometry(width, depth, cols-1, rows-1);
-    const vertices = geometry.getAttribute('position');
-    for (let i = 0; i < heights.length; i++) vertices.setZ(i, heights[i]);
-    geometry.computeVertexNormals();
     terrainMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({map:texture, alphaTest:.48}));
     terrainMesh.position.set(left + width/2, -.08, top + depth/2);
     terrainMesh.rotation.x = -Math.PI/2;
     terrainMesh.receiveShadow = true;
-    terrainMesh.castShadow = true;
-    terrainMesh.visible = false;
     scene.add(terrainMesh);
   }
 
   function surfaceAt(x,z) {
-    return terrainWasVisible ? groundHeight(overlays.terrain,x,z) : 0;
+    return reliefWasEnabled ? groundHeight(overlays.terrain,x,z) : 0;
   }
 
   function project(x,z) {
@@ -338,7 +335,7 @@ async function start() {
     for (let i=0;i<cells.count;i++) {
       const towerHeight = cells.elevation[i]*multiplier;
       if (towerHeight < minHeight || towerHeight*screenScale < 2) continue;
-      const y = terrainWasVisible ? groundLevels[i] : 0;
+      const y = reliefWasEnabled ? groundLevels[i] : 0;
       const radius = cells.radius[i]*screenScale;
       projectedBase.set(cells.x[i],y,cells.z[i]).project(camera);
       projectedTop.set(cells.x[i],y+towerHeight,cells.z[i]).project(camera);
@@ -366,8 +363,15 @@ async function start() {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = null;
-      if (terrainMesh && terrainWasVisible !== overlays.showElevation) {
-        terrainWasVisible = terrainMesh.visible = overlays.showElevation;
+      if (terrainMesh && reliefWasEnabled !== overlays.showElevation) {
+        reliefWasEnabled = terrainMesh.castShadow = overlays.showElevation;
+        const geometry = terrainMesh.geometry;
+        const vertices = geometry.getAttribute('position');
+        const {heights} = overlays.terrain;
+        for (let i=0;i<heights.length;i++) vertices.setZ(i,reliefWasEnabled ? heights[i] : 0);
+        vertices.needsUpdate = true;
+        geometry.computeVertexNormals();
+        geometry.computeBoundingSphere();
         updateHeights();
       }
       updateLight();
@@ -385,12 +389,18 @@ async function start() {
     });
   }
 
+  function overviewZoom() {
+    return Math.min(worldWidth/overview.width,(camera.top-camera.bottom)/overview.depth);
+  }
+
   function moveCamera() {
-    const x = selected?.x ?? -8;
-    const z = selected?.z ?? 1;
+    const x = selected?.x ?? (flat ? overview.x : -8);
+    const z = selected?.z ?? (flat ? overview.z : 1);
     controls.target.set(x, selected && !flat ? 10 : 0, z);
-    camera.position.set(x + (flat ? 0 : 52), flat ? 770 : 476, z + (flat ? .01 : 550));
-    camera.zoom = selected ? worldWidth / selected.distance : 1;
+    camera.position.set(x + (flat ? .01*Math.sin(overview.angle) : 52),
+                        flat ? 770 : 476,
+                        z + (flat ? .01*Math.cos(overview.angle) : 550));
+    camera.zoom = selected ? worldWidth / selected.distance : (flat ? overviewZoom() : 1);
     camera.updateProjectionMatrix();
     controls.enableRotate = !flat;
     controls.update();
@@ -409,6 +419,7 @@ async function start() {
     const h = stage.clientHeight;
     const aspect = w / h;
     const oldWidth = worldWidth;
+    const oldOverviewZoom = overviewZoom();
     const worldHeight = Math.max(470, 740 / aspect);
     worldWidth = worldHeight * aspect;
     if (selected) camera.zoom *= worldWidth / oldWidth;
@@ -416,6 +427,7 @@ async function start() {
     camera.right = worldWidth / 2;
     camera.top = worldHeight / 2;
     camera.bottom = -worldHeight / 2;
+    if (flat && !selected) camera.zoom *= overviewZoom()/oldOverviewZoom;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
     queueDraw();
@@ -426,7 +438,7 @@ async function start() {
   controls.addEventListener('change', () => { tip.hidden = true; queueDraw(); });
 
   view3D.onclick = () => { flat = false; moveCamera(); };
-  viewFlat.onclick = () => { flat = true; moveCamera(); };
+  viewFlat.onclick = () => { flat = true; selected = null; moveCamera(); };
   reset.onclick = () => {
     height.value = height.defaultValue;
     height.setAttribute('aria-valuetext',`${height.value}%`);

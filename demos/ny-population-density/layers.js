@@ -25,6 +25,7 @@ export function createLayers(data, redraw) {
   const geographyToggle = document.querySelector('#show-geography');
   const elevationToggle = document.querySelector('#show-elevation');
   const elevationLegend = document.querySelector('#elevation-legend');
+  const reliefNote = document.querySelector('#relief-note');
   const entries = data.features.map(feature => {
     const path = svgNode('path');
     path.setAttribute('class', `geo-line geo-${feature.kind}`);
@@ -44,6 +45,7 @@ export function createLayers(data, redraw) {
   elevationToggle.disabled = !data.elevation?.image;
   const terrain = data.elevation?.image ? data.elevation : null;
   if (terrain) {
+    elevationLegend.hidden = false;
     const gradient = document.querySelector('#elevation-ramp');
     gradient.style.background = `linear-gradient(90deg,${terrain.stops.map(([, color]) => color).join(',')})`;
     const ticks = document.querySelector('#elevation-ticks');
@@ -55,7 +57,7 @@ export function createLayers(data, redraw) {
   }
   function sync() {
     overlay.classList.toggle('is-visible', geographyToggle.checked);
-    elevationLegend.hidden = !elevationToggle.checked;
+    reliefNote.hidden = !elevationToggle.checked;
     redraw();
   }
   geographyToggle.addEventListener('change', sync);

@@ -19,6 +19,6 @@ The site has no build step. To run locally, serve the directory over HTTP (for e
 | Hudson River | [Natural Earth 1:10m Rivers and Lake Centerlines](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-rivers-lake-centerlines/) |
 | Elevation | [USGS 3DEP bare-earth elevation service](https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer), sampled on a 1 km EPSG:5070 grid |
 
-**Elevation** raises shaded ground beneath the towers. Terrain heights are sampled on a roughly 4 km mesh and exaggerated 14×. Each tower starts at the terrain height sampled at its center. Tower height above the terrain represents population. Tooltips show population and density. Viewing the layers together lets you compare settlement patterns with elevation.
+The base map is colored by elevation. **Elevation relief** raises the ground beneath the towers. Terrain heights are sampled on a roughly 4 km mesh and exaggerated 14×. Each tower starts at the terrain height sampled at its center. Tower height above the terrain represents population. Tooltips show population and density. Viewing the layers together lets you compare settlement patterns with elevation.
 
 To rebuild, export the 3DEP GeoTIFF as `3dep.tif` using EPSG:5070, extent `1320000,2144000,1998000,2664000`, size `678,520`, and bilinear resampling. Export the listed feature geometries as EPSG:5070 GeoJSON, using the filenames in `build_geography.py`. Run `python3 build_geography.py SOURCES data` with GDAL Python bindings, NumPy, and Pillow installed.

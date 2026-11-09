@@ -1,8 +1,9 @@
-import { createLayers } from './layers.js?v=studio-map';
+import { createLayers } from './layers.js?v=terrain-base';
 import { populationColor, populationStops } from './population-colors.js?v=green-base';
 import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
+import { topDownFrame } from './map-frame.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
@@ -47,6 +48,7 @@ export function startCanvasMap({meta, layerData}) {
   let cos, sin, tiltSin, tiltCos;
   const overlays = createLayers(layerData, queue);
   const terrain = overlays.terrain;
+  const overview = topDownFrame(meta.outline);
   const surface = terrain ? terrainTriangles() : null;
 
   function terrainTriangles() {
@@ -96,7 +98,8 @@ export function startCanvasMap({meta, layerData}) {
   }
 
   function measure() {
-    return Math.min(stage.clientWidth / 750, stage.clientHeight / (flat ? 550 : 425));
+    return Math.min(stage.clientWidth / (flat ? overview.width : 750),
+                    stage.clientHeight / (flat ? overview.depth : 425));
   }
 
   function project(x, z, elevation) {
@@ -125,8 +128,8 @@ export function startCanvasMap({meta, layerData}) {
   }
 
   function drawTerrain(width,tall) {
-    if (!overlays.showElevation || !surface) return;
-    if (flat) {
+    if (!terrain) return;
+    if (flat || !overlays.showElevation) {
       const {image,left,top,width:terrainWidth,height:terrainHeight} = terrain;
       const [x,y] = project(left,top,0);
       context.save();
@@ -289,8 +292,8 @@ export function startCanvasMap({meta, layerData}) {
 
   function choose(place) {
     selected = place;
-    centerX = place?.x ?? -8;
-    centerZ = place?.z ?? 1;
+    centerX = place?.x ?? (flat ? overview.x : -8);
+    centerZ = place?.z ?? (flat ? overview.z : 1);
     zoom = place ? Math.min(40, stage.clientWidth / (measure() * place.distance)) : 1;
     if (place && !flat) centerZ -= 15;
     for (const item of meta.places) item.button.setAttribute('aria-pressed', String(item === place));
@@ -299,12 +302,12 @@ export function startCanvasMap({meta, layerData}) {
 
   function switchView(topDown) {
     flat = topDown;
-    angle = flat ? 0 : .10;
+    angle = flat ? overview.angle : .10;
     incline = .67;
     controls.relief.setAttribute('aria-pressed', String(!flat));
     controls.flat.setAttribute('aria-pressed', String(flat));
     controls.hint.textContent = flat ? 'Drag to pan · Scroll to zoom' : 'Drag to rotate · Scroll to zoom · Right-drag to pan';
-    choose(selected);
+    choose(flat ? null : selected);
   }
 
   function pick(x,y) {

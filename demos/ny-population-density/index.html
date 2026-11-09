@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=green-base-fit">
+  <link rel="stylesheet" href="style.css?v=terrain-base">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=green-base').catch(error => {
+    import('./app.js?v=terrain-base').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -49,7 +49,7 @@
       </div>
       <div class="layer-controls" role="group" aria-label="Map overlays">
         <label><input id="show-geography" type="checkbox" disabled> Geographic features</label>
-        <label><input id="show-elevation" type="checkbox" disabled> Elevation</label>
+        <label><input id="show-elevation" type="checkbox" disabled> Elevation relief</label>
         <label>Height scale <select id="height-scale">
           <option value="square-root">Square root</option>
           <option value="linear">Linear</option>
@@ -58,7 +58,7 @@
       <div id="stage">
         <svg id="geographic-overlay" aria-hidden="true"></svg>
         <div class="elevation-legend" id="elevation-legend" hidden>
-          <strong>Ground elevation (m)</strong><small>14× vertical exaggeration</small>
+          <strong>Ground elevation (m)</strong><small id="relief-note" hidden>14× vertical exaggeration</small>
           <div id="elevation-ramp"></div>
           <div id="elevation-ticks"></div>
         </div>
@@ -87,7 +87,7 @@
       <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every level uses the same height scale, so a larger population produces a taller tower. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Hover or tap a cell to see its population and density.</p>
       <p>Colors use the same population scale at every granularity. The gradient runs from green at zero to orange at 3,000, then reaches red at 30,000 people per hexagon. Red continues for higher counts. The legend spaces the population stops evenly for readability.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
-      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-quarter as tall as the tallest tower at the current granularity. Use <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
+      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-quarter as tall as the tallest tower at the current granularity. The base map is colored by elevation. Use <strong>Elevation relief</strong> to raise the terrain beneath the population towers with 14× vertical exaggeration. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
       <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>
     </details>
   </main>
