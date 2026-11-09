@@ -37,9 +37,9 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .map-label{position:absolute;transform:translate(-50%,-100%);padding:1px 5px;border-radius:5px;background:#ffffffdf;color:#112a3e;font-weight:700;font-size:11px;white-space:nowrap;box-shadow:0 1px 4px #112a3e23}
 .map-label:after{content:"";position:absolute;top:100%;left:50%;width:1px;height:6px;background:#245a7a}
-.legend{position:absolute;bottom:15px;left:15px;padding:9px 12px;background:#ffffffec;border:1px solid #dce9f0;border-radius:10px;pointer-events:none}
+.legend{position:absolute;bottom:15px;left:15px;padding:9px 12px;max-width:calc(100% - 30px);background:#ffffffec;border:1px solid #dce9f0;border-radius:10px;pointer-events:none}
 .legend strong{font-size:.75rem}
-.legend ul{list-style:none;display:flex;gap:11px;padding:0;margin:3px 0 0}
+.legend ul{list-style:none;display:flex;flex-wrap:wrap;gap:5px 11px;padding:0;margin:3px 0 0}
 .legend li{font-size:.67rem;font-weight:700;color:#245a7a;white-space:nowrap}
 .legend i{display:block;height:7px;border-radius:2px;background:var(--swatch);margin-bottom:2px}
 .controls-hint{position:absolute;right:14px;bottom:17px;font-size:.72rem;color:#245a7a;pointer-events:none}
@@ -65,3 +65,5 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 
 .granularity output{color:var(--slate);font-size:.73rem;min-width:76px;white-space:nowrap}
 @media(max-width:720px){.toolbar{flex-wrap:wrap}.granularity{order:3;width:100%;padding:2px 3px 1px}.granularity input{width:min(160px,40vw)}}
+
+@media(max-width:640px){.legend{max-width:calc(100% - 16px)}.legend ul{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px 8px}.legend li{font-size:.61rem}}

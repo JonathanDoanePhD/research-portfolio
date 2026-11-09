@@ -1,6 +1,6 @@
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, palette, colorBand}) {
+export function startCanvasMap({meta, palette, colorBand, sunPosition}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -20,7 +20,12 @@ export function startCanvasMap({meta, palette, colorBand}) {
     tip: document.querySelector('#tip'),
   };
   const tops = palette.map(value => '#' + value.toString(16).padStart(6, '0'));
-  const sides = ['#cd9b75', '#d47842', '#b34621', '#348dbd', '#0d3b60'];
+  const sides = palette.map(color => {
+    const channels = [16, 8, 0].map(shift => Math.round(((color >>> shift) & 255) * .74));
+    return `rgb(${channels.join(',')})`;
+  });
+  const shadowX = -sunPosition.x / sunPosition.y;
+  const shadowZ = -sunPosition.z / sunPosition.y;
   let cells;
   let bands;
   let order;
@@ -83,6 +88,40 @@ export function startCanvasMap({meta, palette, colorBand}) {
     context.fill('evenodd');
   }
 
+  function drawShadows(width, tall, multiplier) {
+    if (multiplier === 0) return;
+    // Project the horizontal cast direction from map coordinates into the current view.
+    const shiftX = (shadowX*cos - shadowZ*sin) * scale;
+    const shiftY = (shadowX*sin + shadowZ*cos) * tiltSin * scale;
+    const length = Math.hypot(shiftX, shiftY);
+    const minHeight = .65 / length;
+    const normalX = -shiftY / length;
+    const normalY = shiftX / length;
+    context.beginPath();
+    for (const i of order) {
+      const elevation = cells.elevation[i] * multiplier;
+      if (elevation < minHeight) continue;
+      const dx = cells.x[i] - centerX;
+      const dz = cells.z[i] - centerZ;
+      const x = width/2 + (dx*cos - dz*sin)*scale;
+      const y = tall/2 + (dx*sin + dz*cos)*tiltSin*scale;
+      const endX = x + shiftX*elevation;
+      const endY = y + shiftY*elevation;
+      const radius = Math.max(.42, cells.radius[i]*scale*.91);
+      if (Math.max(x,endX)+radius < 0 || Math.min(x,endX)-radius > width ||
+          Math.max(y,endY)+radius < 0 || Math.min(y,endY)-radius > tall) continue;
+      const nx = normalX*radius;
+      const ny = normalY*radius;
+      context.moveTo(x+nx,y+ny);
+      context.lineTo(endX+nx,endY+ny);
+      context.lineTo(endX-nx,endY-ny);
+      context.lineTo(x-nx,y-ny);
+      context.closePath();
+    }
+    context.fillStyle = 'rgba(20,43,62,.24)';
+    context.fill();
+  }
+
   function draw() {
     frame = null;
     const width = stage.clientWidth;
@@ -109,6 +148,7 @@ export function startCanvasMap({meta, palette, colorBand}) {
     outline(0, '#edddc8');
 
     const multiplier = Number(controls.height.value) / 100;
+    drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
     for (const i of order) {

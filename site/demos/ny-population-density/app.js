@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=linear-grid';
+import { startCanvasMap } from './fallback.js?v=northwest-light';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -13,9 +13,29 @@ const view3D = document.querySelector('#view-3d');
 const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
-const palette = [0xedc5a2, 0xf39655, 0xdf6027, 0x53b7e6, 0x135888];
-const colorBand = d => d < 10 ? 0 : d < 100 ? 1 : d < 1000 ? 2 : d < 10000 ? 3 : 4;
-const towerHeight = density => density * (66 / 120000);
+const densityBands = [
+  {limit:10, color:0xedc5a2, label:'<10'},
+  {limit:100, color:0xf39655, label:'10–99'},
+  {limit:500, color:0xe86f37, label:'100–499'},
+  {limit:1000, color:0xbe4d28, label:'500–999'},
+  {limit:2500, color:0x9bdcff, label:'1,000–2,499'},
+  {limit:10000, color:0x53b7e6, label:'2,500–9,999'},
+  {limit:30000, color:0x277cb6, label:'10,000–29,999'},
+  {limit:Infinity, color:0x123f69, label:'30,000+'},
+];
+const palette = densityBands.map(band => band.color);
+const colorBand = density => densityBands.findIndex(band => density < band.limit);
+const towerHeight = density => density * (112 / 120000);
+const sunPosition = {x:-350, y:600, z:-350};
+
+const legend = document.querySelector('#density-bands');
+for (const {color, label} of densityBands) {
+  const entry = document.createElement('li');
+  const swatch = document.createElement('i');
+  swatch.style.setProperty('--swatch', '#' + color.toString(16).padStart(6, '0'));
+  entry.append(swatch, label);
+  legend.append(entry);
+}
 
 async function checkedFetch(path) {
   const response = await fetch(path);
@@ -99,6 +119,7 @@ function stateBase(polygons) {
     shape.holes = holes.map(ring => new THREE.Path(points(ring)));
     const geometry = new THREE.ExtrudeGeometry(shape, { depth: 4, bevelEnabled: false });
     const island = new THREE.Mesh(geometry, material);
+    island.receiveShadow = true;
     island.rotation.x = -Math.PI / 2;
     island.position.y = -4.3;
     group.add(island);
@@ -117,9 +138,12 @@ async function start() {
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand}));
+    wireGranularity(levels, grids, startCanvasMap({meta, palette, colorBand, sunPosition}));
     return;
   }
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
   const canvas = renderer.domElement;
@@ -128,10 +152,22 @@ async function start() {
   stage.prepend(canvas);
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 2.0));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.45);
-  sun.position.set(-200, 400, -180);
-  scene.add(sun, stateBase(meta.outline));
+  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 1.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.95);
+  sun.position.set(sunPosition.x, sunPosition.y, sunPosition.z);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(4096, 4096);
+  Object.assign(sun.shadow.camera, {left:-565, right:565, top:565, bottom:-565, near:10, far:1550});
+  sun.shadow.camera.updateProjectionMatrix();
+  sun.shadow.normalBias = 0.08;
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(1600, 1600),
+    new THREE.ShadowMaterial({color:0x17364f, opacity:.22, depthWrite:false})
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -4.4;
+  ground.receiveShadow = true;
+  scene.add(ground, sun, stateBase(meta.outline));
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 3000);
   const controls = new OrbitControls(camera, canvas);
@@ -145,6 +181,8 @@ async function start() {
   const material = new THREE.MeshLambertMaterial({ flatShading: true });
   const towers = new THREE.InstancedMesh(prism, material, meta.count);
   towers.frustumCulled = false;
+  towers.castShadow = true;
+  towers.receiveShadow = true;
   towers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   scene.add(towers);
 
@@ -176,6 +214,7 @@ async function start() {
       towers.setMatrixAt(i, matrix);
     }
     towers.instanceMatrix.needsUpdate = true;
+    renderer.shadowMap.needsUpdate = true;
   }
 
   let selected = null;
