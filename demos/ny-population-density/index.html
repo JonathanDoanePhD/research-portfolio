@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=population-totals">
+  <link rel="stylesheet" href="style.css?v=relative-population-colors">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=population-totals').catch(error => {
+    import('./app.js?v=relative-population-colors').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -54,19 +54,6 @@
           <option value="square-root">Square root</option>
           <option value="linear">Linear</option>
         </select></label>
-        <label>Palette <select id="palette">
-          <option value="nycRelief">NYC relief</option>
-          <option value="orangeBlue">Orange / White / Blue</option>
-          <option value="greenOrange">Green / White / Orange</option>
-          <option value="greenWhite">Green / White</option>
-          <option value="custom">Custom</option>
-        </select></label>
-        <div id="custom-palette" class="custom-palette" hidden>
-          <label>Low <input id="color-low" type="color" value="#df631e"></label>
-          <label><input id="color-mid-enabled" type="checkbox" checked> 50k color</label>
-          <input id="color-mid" type="color" aria-label="Color at 50,000 people" value="#ffffff">
-          <label>High <input id="color-high" type="color" value="#124576"></label>
-        </div>
       </div>
       <div id="stage">
         <svg id="geographic-overlay" aria-hidden="true"></svg>
@@ -78,9 +65,10 @@
         <div id="status" role="status">Loading New York’s population grid…</div>
         <div id="labels" aria-hidden="true"></div>
         <div id="tip" class="tooltip" hidden></div>
-        <div class="legend" aria-label="Estimated population per hexagon">
-          <strong>People per hexagon</strong>
-          <ul id="density-bands"></ul>
+        <div class="legend" aria-label="Relative population color scale">
+          <strong>Population range at this granularity</strong>
+          <ul id="population-bands"></ul>
+          <small id="population-color-range"></small>
         </div>
         <div id="controls-hint" class="controls-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
       </div>
@@ -97,8 +85,8 @@
 
     <details class="method">
       <summary>How to read this map</summary>
-      <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every level uses the same height and color scales, so a larger population produces a taller tower. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Hover or tap a cell to see its population and density.</p>
-      <p>The 5,000, 10,000, and 50,000 marks borrow population reference points from <a href="https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html">Census urban-area criteria</a> and <a href="https://www.census.gov/programs-surveys/metro-micro/about.html">OMB statistical-area criteria</a>. They are reference marks for the grid, since these definitions also use other criteria and a hexagon can cover parts of multiple communities.</p>
+      <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every level uses the same height scale, so a larger population produces a taller tower. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Hover or tap a cell to see its population and density.</p>
+      <p>Colors use the population range of the selected granularity. Yellow at 0% represents the least populated hexagon, and red at 100% represents the most populated. Percentages measure position between those two counts. Each tower starts in yellow and ends at the color for its population.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
       <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries, and <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
       <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>

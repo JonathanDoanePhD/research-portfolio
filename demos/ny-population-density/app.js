@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=population-totals';
+import { startCanvasMap } from './fallback.js?v=relative-population-colors';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, createPalette, populationFraction, maxStops } from './population-colors.js?v=population-totals';
+import { colorChannels, mountPopulationLegend, populationFraction, populationStops } from './population-colors.js?v=relative-population-colors';
 import { studio } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
@@ -19,7 +19,7 @@ const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
 const heightScale = document.querySelector('#height-scale');
-const palette = createPalette();
+mountPopulationLegend(document.querySelector('#population-bands'));
 const fullScreen = document.querySelector('#fullscreen');
 const mapCard = stage.closest('.map-card');
 fullScreen.hidden = false;
@@ -52,39 +52,27 @@ document.addEventListener('keydown',event => {
   if (event.key === 'Escape' && mapCard.classList.contains('is-expanded')) expandViewport(false);
 });
 
-function towerMaterial(queueDraw) {
+function towerMaterial() {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
-  const positions = {value:new Float32Array(maxStops)};
-  const colors = {value:Array.from({length:maxStops},() => new THREE.Vector3())};
-  const count = {value:0};
-  function sync(stops) {
-    count.value = stops.length;
-    stops.forEach(([position,color],i) => {
-      positions.value[i] = position;
-      colors.value[i].set(...colorChannels(color).map(channel => channel/255));
-    });
-  }
-  sync(palette.stops);
-  palette.subscribe(stops => { sync(stops); queueDraw(); });
+  const stopCount = populationStops.length;
+  const colors = {value:populationStops.map(([,color]) =>
+    new THREE.Vector3(...colorChannels(color).map(channel => channel/255))
+  )};
   material.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms,{rampPositions:positions,rampColors:colors,rampCount:count});
+    shader.uniforms.rampColors = colors;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float towerMagnitude;\nvarying float populationAtHeight;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerMagnitude * (position.y + 0.5);');
+      .replace('#include <common>', '#include <common>\nattribute float towerColorFraction;\nvarying float populationAtHeight;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerColorFraction * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         varying float populationAtHeight;
-        uniform float rampPositions[${maxStops}];
-        uniform vec3 rampColors[${maxStops}];
-        uniform int rampCount;
+        uniform vec3 rampColors[${stopCount}];
         vec3 populationGradient(float d) {
-          float t = clamp(d, 0.0, 1.0);
+          float position = clamp(d, 0.0, 1.0) * ${stopCount-1}.0;
           vec3 c = rampColors[0];
-          for (int i=1; i<${maxStops}; i++) {
-            if (i >= rampCount) break;
-            if (t <= rampPositions[i]) {
-              float weight = (t-rampPositions[i-1])/(rampPositions[i]-rampPositions[i-1]);
-              c = mix(rampColors[i-1], rampColors[i], weight);
+          for (int i=1; i<${stopCount}; i++) {
+            if (position <= float(i)) {
+              c = mix(rampColors[i-1], rampColors[i], position-float(i-1));
               break;
             }
             c = rampColors[i];
@@ -116,10 +104,12 @@ async function readGrid(meta) {
     count: meta.count,
     x: new Float32Array(meta.count), z: new Float32Array(meta.count),
     density: new Float32Array(meta.count), elevation: new Float32Array(meta.count),
-    magnitude: new Float32Array(meta.count),
+    colorFraction: new Float32Array(meta.count),
     radius: new Float32Array(meta.count), angle: new Float32Array(meta.count),
     population: new Uint32Array(meta.count),
   };
+  let smallest = Infinity;
+  let largest = 0;
   let index = 0;
   for (const chunk of chunks) {
     const data = new DataView(chunk);
@@ -128,11 +118,17 @@ async function readGrid(meta) {
       cells.z[index] = data.getInt16(offset + 2, true) * meta.step;
       cells.density[index] = data.getFloat32(offset + 4, true);
       cells.population[index] = recordBytes === 12 ? data.getUint16(offset + 8, true) : data.getUint32(offset + 8, true);
+      smallest = Math.min(smallest,cells.population[index]);
+      largest = Math.max(largest,cells.population[index]);
       cells.radius[index] = data.getUint8(offset + recordBytes - 2) * radiusStep;
       cells.angle[index] = data.getUint8(offset + recordBytes - 1) * Math.PI / (3 * 255);
     }
   }
-  return cells;
+  const range = largest-smallest;
+  if (range > 0) {
+    for (let i=0;i<cells.count;i++) cells.colorFraction[i] = (cells.population[i]-smallest)/range;
+  }
+  return {...cells, smallest, largest};
 }
 
 function wireGranularity(levels, grids, renderGrid) {
@@ -140,6 +136,7 @@ function wireGranularity(levels, grids, renderGrid) {
   const areaLabel = document.querySelector('#cell-area');
   const countLabel = document.querySelector('#grid-count');
   const largestLabel = document.querySelector('#largest-cell');
+  const colorRange = document.querySelector('#population-color-range');
   function update() {
     const index = Number(control.value);
     const cells = grids[index];
@@ -147,14 +144,11 @@ function wireGranularity(levels, grids, renderGrid) {
     areaLabel.textContent = `~${area} sq. mi.`;
     control.setAttribute('aria-valuetext', `${index === 0 ? 'Original cells, ' : ''}about ${area} square miles per hexagon`);
     countLabel.textContent = number.format(cells.count);
-    let largest = 0;
-    for (let i = 0; i < cells.count; i++) {
-      const population = cells.population[i];
-      cells.magnitude[i] = populationFraction(population,heightScale.value);
-      cells.elevation[i] = 112*cells.magnitude[i];
-      largest = Math.max(largest,population);
+    for (let i=0;i<cells.count;i++) {
+      cells.elevation[i] = 112*populationFraction(cells.population[i],heightScale.value);
     }
-    largestLabel.textContent = number.format(largest);
+    largestLabel.textContent = number.format(cells.largest);
+    colorRange.textContent = `${number.format(cells.smallest)} to ${number.format(cells.largest)} people per hexagon`;
     renderGrid(cells);
   }
   control.oninput = update;
@@ -201,7 +195,7 @@ async function start() {
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, palette, layerData}));
+    wireGranularity(levels, grids, startCanvasMap({meta, layerData}));
     return;
   }
   renderer.shadowMap.enabled = true;
@@ -241,9 +235,9 @@ async function start() {
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   prism.rotateY(-Math.PI / 2);
-  const towerMagnitudes = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
-  prism.setAttribute('towerMagnitude', towerMagnitudes);
-  const towers = new THREE.InstancedMesh(prism, towerMaterial(queueDraw), meta.count);
+  const towerColorFractions = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
+  prism.setAttribute('towerColorFraction', towerColorFractions);
+  const towers = new THREE.InstancedMesh(prism, towerMaterial(), meta.count);
   towers.frustumCulled = false;
   towers.castShadow = true;
   towers.receiveShadow = true;
@@ -504,8 +498,8 @@ async function start() {
   function updateCells(grid) {
     cells = grid;
     towers.count = picker.count = cells.count;
-    towerMagnitudes.array.set(cells.magnitude);
-    towerMagnitudes.needsUpdate = true;
+    towerColorFractions.array.set(cells.colorFraction);
+    towerColorFractions.needsUpdate = true;
     groundLevels = cells.x.map((x,i) => groundHeight(overlays.terrain,x,cells.z[i]));
     for (const place of meta.places) {
       place.peak = 0;

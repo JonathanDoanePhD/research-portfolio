@@ -1,12 +1,12 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { makePopulationColor } from './population-colors.js?v=population-totals';
+import { populationColor, populationStops } from './population-colors.js?v=relative-population-colors';
 import { flatLightPosition, groundShadow } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, palette, layerData}) {
+export function startCanvasMap({meta, layerData}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -29,24 +29,14 @@ export function startCanvasMap({meta, palette, layerData}) {
   colorStrip.width = 1;
   colorStrip.height = 4096;
   const strip = colorStrip.getContext('2d');
-  let populationColor;
-  function updatePalette(stops) {
-    populationColor = makePopulationColor(stops);
-    const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
-    for (const [at,color] of stops) gradient.addColorStop(1-at,color);
-    strip.fillStyle = gradient;
-    strip.fillRect(0,0,1,colorStrip.height);
-    if (cells) {
-      tops = Array.from(cells.magnitude,populationColor);
-      queue();
-    }
-  }
+  const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
+  for (const [at,color] of populationStops) gradient.addColorStop(1-at,color);
+  strip.fillStyle = gradient;
+  strip.fillRect(0,0,1,colorStrip.height);
   let cells;
   let tops;
   let groundLevels;
   let order;
-  updatePalette(palette.stops);
-  palette.subscribe(updatePalette);
   const visible = [];
   const screenX = new Float32Array(meta.count);
   const screenBase = new Float32Array(meta.count);
@@ -243,12 +233,16 @@ export function startCanvasMap({meta, palette, layerData}) {
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
-      if (y - top > .8) {
-        const sourceHeight = colorStrip.height * Math.min(1,cells.magnitude[i]);
-        context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
-                          x-radius,top,radius*2,y-top);
-      }
       if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
+      if (y - top > .8) {
+        const sourceHeight = colorStrip.height * cells.colorFraction[i];
+        if (sourceHeight > 0) {
+          context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
+                            x-radius,top,radius*2,y-top);
+        } else {
+          context.fillRect(x-radius,top,radius*2,y-top);
+        }
+      }
       const capHeight = Math.max(.85, 2 * radius * tiltSin);
       if (radius < 1.6) {
         context.fillRect(x-radius, top-capHeight/2, radius*2, capHeight);
@@ -404,7 +398,7 @@ export function startCanvasMap({meta, palette, layerData}) {
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    tops = Array.from(cells.magnitude,populationColor);
+    tops = Array.from(cells.colorFraction,populationColor);
     groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;
