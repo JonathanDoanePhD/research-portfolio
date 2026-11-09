@@ -1,18 +1,18 @@
 const maxPopulation = 3036828;
 
-export const maxColorPopulation = maxPopulation;
+export const maxColorPopulation = 30000;
 
 const brackets = [
-  [0, '0', '#df631e'],
-  [100, '100', '#e47130'],
-  [500, '500', '#e98144'],
-  [2500, '2.5k', '#efa16b'],
-  [5000, '5k', '#f4b98f'],
-  [10000, '10k', '#fad5b9'],
-  [50000, '50k', '#ffffff'],
-  [250000, '250k', '#c5d8ea'],
-  [1000000, '1M', '#6495c0'],
-  [maxColorPopulation, '3M', '#124576'],
+  [0, '0', '#f3d8bb'],
+  [100, '100', '#f1be94'],
+  [500, '500', '#ed9a5e'],
+  [1500, '1.5k', '#d55421'],
+  [2500, '2.5k', '#fffaf5'],
+  [4000, '4k', '#b9d8e8'],
+  [6500, '6.5k', '#6ca9c2'],
+  [12000, '12k', '#347fb7'],
+  [22000, '22k', '#24568d'],
+  [maxColorPopulation, '30k+', '#142a62'],
 ];
 
 export const populationStops = brackets.map(([population,,color]) => [population/maxColorPopulation,color]);
@@ -45,7 +45,8 @@ export function mountPopulationLegend(legend) {
   for (const [population,label] of brackets) {
     const entry = document.createElement('li');
     entry.textContent = label;
-    entry.setAttribute('aria-label', `${population.toLocaleString('en-US')} people per hexagon`);
+    const suffix = population === maxColorPopulation ? ' or more' : '';
+    entry.setAttribute('aria-label', `${population.toLocaleString('en-US')}${suffix} people per hexagon`);
     legend.append(entry);
   }
   legend.style.setProperty('--population-gradient',

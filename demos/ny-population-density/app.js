@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=orange-white-blue';
+import { startCanvasMap } from './fallback.js?v=nyc-blue';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=orange-white-blue';
+import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=nyc-blue';
 import { studio } from './studio-light.js';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
