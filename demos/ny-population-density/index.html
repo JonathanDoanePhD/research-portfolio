@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=relative-population-colors">
+  <link rel="stylesheet" href="style.css?v=fixed-population">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=overlay-height').catch(error => {
+    import('./app.js?v=fixed-population').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -38,7 +38,7 @@
           <button id="view-3d" type="button" aria-pressed="true" disabled>3D relief</button>
           <button id="view-flat" type="button" aria-pressed="false" disabled>Top down</button>
         </div>
-        <label class="height-control" for="height">Tower height <input id="height" type="range" min="0" max="180" value="180" aria-valuetext="180%" disabled></label>
+        <label class="height-control" for="height">Tower height <input id="height" type="range" min="0" max="280" value="220" aria-valuetext="220%" disabled></label>
         <label class="height-control granularity" for="granularity">
           Granularity
           <input id="granularity" type="range" min="0" max="3" step="1" value="0" disabled>
@@ -65,10 +65,9 @@
         <div id="status" role="status">Loading New York’s population grid…</div>
         <div id="labels" aria-hidden="true"></div>
         <div id="tip" class="tooltip" hidden></div>
-        <div class="legend" aria-label="Relative population color scale">
-          <strong>Population range at this granularity</strong>
+        <div class="legend" aria-label="Population color scale">
+          <strong>People per hexagon</strong>
           <ul id="population-bands"></ul>
-          <small id="population-color-range"></small>
         </div>
         <div id="controls-hint" class="controls-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
       </div>
@@ -86,9 +85,9 @@
     <details class="method">
       <summary>How to read this map</summary>
       <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every level uses the same height scale, so a larger population produces a taller tower. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Hover or tap a cell to see its population and density.</p>
-      <p>Colors use the population range of the selected granularity. Yellow at 0% represents the least populated hexagon, and red at 100% represents the most populated. Percentages measure position between those two counts. Each tower starts in yellow and ends at the color for its population.</p>
+      <p>Colors use the same population scale at every granularity. Each tower starts in green and follows the gradient up to the color for its population. White marks 10,000 people and returns at 120,000, where it continues for all higher counts.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
-      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-fifth as tall as the tallest tower at the current granularity. Use <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
+      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-quarter as tall as the tallest tower at the current granularity. Use <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
       <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>
     </details>
   </main>

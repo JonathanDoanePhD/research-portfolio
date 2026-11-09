@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=overlay-height';
+import { startCanvasMap } from './fallback.js?v=fixed-population';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, mountPopulationLegend, populationFraction, populationStops } from './population-colors.js?v=relative-population-colors';
+import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=fixed-population';
 import { studio } from './studio-light.js';
-import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=overlay-height';
+import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 
 const stage = document.querySelector('#stage');
@@ -108,7 +108,6 @@ async function readGrid(meta) {
     radius: new Float32Array(meta.count), angle: new Float32Array(meta.count),
     population: new Uint32Array(meta.count),
   };
-  let smallest = Infinity;
   let largest = 0;
   let index = 0;
   for (const chunk of chunks) {
@@ -118,17 +117,13 @@ async function readGrid(meta) {
       cells.z[index] = data.getInt16(offset + 2, true) * meta.step;
       cells.density[index] = data.getFloat32(offset + 4, true);
       cells.population[index] = recordBytes === 12 ? data.getUint16(offset + 8, true) : data.getUint32(offset + 8, true);
-      smallest = Math.min(smallest,cells.population[index]);
+      cells.colorFraction[index] = cells.population[index]/maxColorPopulation;
       largest = Math.max(largest,cells.population[index]);
       cells.radius[index] = data.getUint8(offset + recordBytes - 2) * radiusStep;
       cells.angle[index] = data.getUint8(offset + recordBytes - 1) * Math.PI / (3 * 255);
     }
   }
-  const range = largest-smallest;
-  if (range > 0) {
-    for (let i=0;i<cells.count;i++) cells.colorFraction[i] = (cells.population[i]-smallest)/range;
-  }
-  return {...cells, smallest, largest};
+  return {...cells, largest};
 }
 
 function wireGranularity(levels, grids, renderGrid) {
@@ -136,7 +131,6 @@ function wireGranularity(levels, grids, renderGrid) {
   const areaLabel = document.querySelector('#cell-area');
   const countLabel = document.querySelector('#grid-count');
   const largestLabel = document.querySelector('#largest-cell');
-  const colorRange = document.querySelector('#population-color-range');
   function update() {
     const index = Number(control.value);
     const cells = grids[index];
@@ -149,7 +143,6 @@ function wireGranularity(levels, grids, renderGrid) {
     }
     cells.peakHeight = 112*populationFraction(cells.largest,heightScale.value);
     largestLabel.textContent = number.format(cells.largest);
-    colorRange.textContent = `${number.format(cells.smallest)} to ${number.format(cells.largest)} people per hexagon`;
     renderGrid(cells);
   }
   control.oninput = update;
@@ -431,7 +424,7 @@ async function start() {
   view3D.onclick = () => { flat = false; moveCamera(); };
   viewFlat.onclick = () => { flat = true; moveCamera(); };
   reset.onclick = () => {
-    height.value = height.max;
+    height.value = height.defaultValue;
     height.setAttribute('aria-valuetext',`${height.value}%`);
     multiplier = Number(height.value)/100;
     selected = null;

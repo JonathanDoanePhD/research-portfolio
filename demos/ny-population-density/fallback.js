@@ -1,7 +1,7 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { populationColor, populationStops } from './population-colors.js?v=relative-population-colors';
+import { populationColor, populationStops } from './population-colors.js?v=fixed-population';
 import { flatLightPosition, groundShadow } from './studio-light.js';
-import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=overlay-height';
+import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 
 const fmt = new Intl.NumberFormat('en-US');
@@ -237,10 +237,14 @@ export function startCanvasMap({meta, layerData}) {
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
       if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       if (y - top > .8) {
-        const sourceHeight = colorStrip.height * cells.colorFraction[i];
-        if (sourceHeight > 0) {
+        const fraction = cells.colorFraction[i];
+        if (fraction > 0) {
+          const rampHeight = Math.min(1,fraction);
+          const sourceHeight = colorStrip.height * rampHeight;
+          const gradientTop = y - (y-top) * (rampHeight/fraction);
+          if (gradientTop > top) context.fillRect(x-radius,top,radius*2,gradientTop-top);
           context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
-                            x-radius,top,radius*2,y-top);
+                            x-radius,gradientTop,radius*2,y-gradientTop);
         } else {
           context.fillRect(x-radius,top,radius*2,y-top);
         }
@@ -388,7 +392,7 @@ export function startCanvasMap({meta, layerData}) {
   controls.flat.onclick = () => switchView(true);
   controls.reset.onclick = () => {
     selected = null;
-    controls.height.value = controls.height.max;
+    controls.height.value = controls.height.defaultValue;
     controls.height.setAttribute('aria-valuetext',`${controls.height.value}%`);
     switchView(false);
   };

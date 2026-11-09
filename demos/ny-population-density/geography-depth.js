@@ -1,6 +1,6 @@
 // Use a relative height cutoff so broad, low columns in coarse grids leave geography visible.
 export function minimumOcclusionHeight(peakHeight) {
-  return peakHeight * .2;
+  return peakHeight * .25;
 }
 
 // Compare geography and tower silhouettes in screen space. Larger depth is closer.
