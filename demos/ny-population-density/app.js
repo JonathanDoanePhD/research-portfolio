@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=nyc-ramp';
+import { startCanvasMap } from './fallback.js?v=population-totals';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, createPalette, maxDensity, maxStops } from './population-colors.js?v=nyc-ramp';
+import { colorChannels, createPalette, populationFraction, maxStops } from './population-colors.js?v=population-totals';
 import { studio } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
@@ -18,7 +18,7 @@ const view3D = document.querySelector('#view-3d');
 const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
-const towerHeight = density => density * (112 / 120000);
+const heightScale = document.querySelector('#height-scale');
 const palette = createPalette();
 const fullScreen = document.querySelector('#fullscreen');
 const mapCard = stage.closest('.map-card');
@@ -69,16 +69,16 @@ function towerMaterial(queueDraw) {
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms,{rampPositions:positions,rampColors:colors,rampCount:count});
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float towerDensity;\nvarying float densityAtHeight;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\ndensityAtHeight = towerDensity * (position.y + 0.5);');
+      .replace('#include <common>', '#include <common>\nattribute float towerMagnitude;\nvarying float populationAtHeight;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerMagnitude * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
-        varying float densityAtHeight;
+        varying float populationAtHeight;
         uniform float rampPositions[${maxStops}];
         uniform vec3 rampColors[${maxStops}];
         uniform int rampCount;
         vec3 populationGradient(float d) {
-          float t = clamp(d / ${maxDensity.toFixed(6)}, 0.0, 1.0);
+          float t = clamp(d, 0.0, 1.0);
           vec3 c = rampColors[0];
           for (int i=1; i<${maxStops}; i++) {
             if (i >= rampCount) break;
@@ -91,7 +91,7 @@ function towerMaterial(queueDraw) {
           }
           return mix(c/12.92, pow((c+0.055)/1.055, vec3(2.4)), step(vec3(0.04045),c));
         }`)
-      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= populationGradient(densityAtHeight);');
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= populationGradient(populationAtHeight);');
   };
   return material;
 }
@@ -116,6 +116,7 @@ async function readGrid(meta) {
     count: meta.count,
     x: new Float32Array(meta.count), z: new Float32Array(meta.count),
     density: new Float32Array(meta.count), elevation: new Float32Array(meta.count),
+    magnitude: new Float32Array(meta.count),
     radius: new Float32Array(meta.count), angle: new Float32Array(meta.count),
     population: new Uint32Array(meta.count),
   };
@@ -126,7 +127,6 @@ async function readGrid(meta) {
       cells.x[index] = data.getInt16(offset, true) * meta.step;
       cells.z[index] = data.getInt16(offset + 2, true) * meta.step;
       cells.density[index] = data.getFloat32(offset + 4, true);
-      cells.elevation[index] = towerHeight(cells.density[index]);
       cells.population[index] = recordBytes === 12 ? data.getUint16(offset + 8, true) : data.getUint32(offset + 8, true);
       cells.radius[index] = data.getUint8(offset + recordBytes - 2) * radiusStep;
       cells.angle[index] = data.getUint8(offset + recordBytes - 1) * Math.PI / (3 * 255);
@@ -139,7 +139,7 @@ function wireGranularity(levels, grids, renderGrid) {
   const control = document.querySelector('#granularity');
   const areaLabel = document.querySelector('#cell-area');
   const countLabel = document.querySelector('#grid-count');
-  const shareLabel = document.querySelector('#dense-share');
+  const largestLabel = document.querySelector('#largest-cell');
   function update() {
     const index = Number(control.value);
     const cells = grids[index];
@@ -147,16 +147,18 @@ function wireGranularity(levels, grids, renderGrid) {
     areaLabel.textContent = `~${area} sq. mi.`;
     control.setAttribute('aria-valuetext', `${index === 0 ? 'Original cells, ' : ''}about ${area} square miles per hexagon`);
     countLabel.textContent = number.format(cells.count);
-    let total = 0;
-    let dense = 0;
+    let largest = 0;
     for (let i = 0; i < cells.count; i++) {
-      total += cells.population[i];
-      if (cells.density[i] >= 10000) dense += cells.population[i];
+      const population = cells.population[i];
+      cells.magnitude[i] = populationFraction(population,heightScale.value);
+      cells.elevation[i] = 112*cells.magnitude[i];
+      largest = Math.max(largest,population);
     }
-    shareLabel.textContent = new Intl.NumberFormat('en-US', {style: 'percent'}).format(dense / total);
+    largestLabel.textContent = number.format(largest);
     renderGrid(cells);
   }
   control.oninput = update;
+  heightScale.addEventListener('change',update);
   control.disabled = false;
   reset.addEventListener('click', () => {
     if (control.value === '0') return;
@@ -209,7 +211,7 @@ async function start() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-label', 'New York population density map. Arrow keys pan. Plus and minus zoom.');
+  canvas.setAttribute('aria-label', 'New York population map. Arrow keys pan. Plus and minus zoom.');
   stage.prepend(canvas);
 
   const scene = new THREE.Scene();
@@ -239,8 +241,8 @@ async function start() {
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   prism.rotateY(-Math.PI / 2);
-  const towerDensities = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
-  prism.setAttribute('towerDensity', towerDensities);
+  const towerMagnitudes = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
+  prism.setAttribute('towerMagnitude', towerMagnitudes);
   const towers = new THREE.InstancedMesh(prism, towerMaterial(queueDraw), meta.count);
   towers.frustumCulled = false;
   towers.castShadow = true;
@@ -475,8 +477,8 @@ async function start() {
     if (tip.hidden) return;
     tip.replaceChildren();
     const title = document.createElement('strong');
-    title.textContent = `${number.format(Math.round(cells.density[index]))} people / sq. mi.`;
-    tip.append(title, `${number.format(cells.population[index])} estimated residents`);
+    title.textContent = `${number.format(cells.population[index])} estimated residents`;
+    tip.append(title, `${number.format(Math.round(cells.density[index]))} people / sq. mi.`);
     tip.style.left = `${Math.max(4, Math.min(x + 13, w - tip.offsetWidth - 6))}px`;
     tip.style.top = `${Math.max(4, Math.min(y + 12, h - tip.offsetHeight - 6))}px`;
   }
@@ -502,8 +504,8 @@ async function start() {
   function updateCells(grid) {
     cells = grid;
     towers.count = picker.count = cells.count;
-    towerDensities.array.set(cells.density);
-    towerDensities.needsUpdate = true;
+    towerMagnitudes.array.set(cells.magnitude);
+    towerMagnitudes.needsUpdate = true;
     groundLevels = cells.x.map((x,i) => groundHeight(overlays.terrain,x,cells.z[i]));
     for (const place of meta.places) {
       place.peak = 0;

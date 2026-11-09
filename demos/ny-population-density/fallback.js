@@ -1,5 +1,5 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { makeDensityColor, maxDensity } from './population-colors.js?v=nyc-ramp';
+import { makePopulationColor } from './population-colors.js?v=population-totals';
 import { flatLightPosition, groundShadow } from './studio-light.js';
 import { makeTowerOcclusion } from './geography-depth.js';
 import { groundHeight } from './terrain.js';
@@ -12,7 +12,7 @@ export function startCanvasMap({meta, palette, layerData}) {
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is unavailable.');
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-label', 'New York population density map. Arrow keys pan. Plus and minus zoom.');
+  canvas.setAttribute('aria-label', 'New York population map. Arrow keys pan. Plus and minus zoom.');
   stage.prepend(canvas);
 
   const controls = {
@@ -29,15 +29,15 @@ export function startCanvasMap({meta, palette, layerData}) {
   colorStrip.width = 1;
   colorStrip.height = 4096;
   const strip = colorStrip.getContext('2d');
-  let densityColor;
+  let populationColor;
   function updatePalette(stops) {
-    densityColor = makeDensityColor(stops);
+    populationColor = makePopulationColor(stops);
     const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
     for (const [at,color] of stops) gradient.addColorStop(1-at,color);
     strip.fillStyle = gradient;
     strip.fillRect(0,0,1,colorStrip.height);
     if (cells) {
-      tops = Array.from(cells.density,densityColor);
+      tops = Array.from(cells.magnitude,populationColor);
       queue();
     }
   }
@@ -244,7 +244,7 @@ export function startCanvasMap({meta, palette, layerData}) {
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
       if (y - top > .8) {
-        const sourceHeight = colorStrip.height * Math.min(1,cells.density[i]/maxDensity);
+        const sourceHeight = colorStrip.height * Math.min(1,cells.magnitude[i]);
         context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
                           x-radius,top,radius*2,y-top);
       }
@@ -322,8 +322,8 @@ export function startCanvasMap({meta, palette, layerData}) {
       if (Math.abs(x-screenX[i]) > Math.max(1.5,radii[i]) ||
           y < screenTop[i]-Math.max(1.5,radii[i]) || y > screenBase[i]+Math.max(1.5,radii[i])) continue;
       const title = document.createElement('strong');
-      title.textContent = `${fmt.format(Math.round(cells.density[i]))} people / sq. mi.`;
-      controls.tip.replaceChildren(title, `${fmt.format(cells.population[i])} estimated residents`);
+      title.textContent = `${fmt.format(cells.population[i])} estimated residents`;
+      controls.tip.replaceChildren(title, `${fmt.format(Math.round(cells.density[i]))} people / sq. mi.`);
       controls.tip.hidden = false;
       controls.tip.style.left = `${Math.max(4,Math.min(x+12,canvas.clientWidth-controls.tip.offsetWidth-6))}px`;
       controls.tip.style.top = `${Math.max(4,Math.min(y+12,canvas.clientHeight-controls.tip.offsetHeight-6))}px`;
@@ -404,7 +404,7 @@ export function startCanvasMap({meta, palette, layerData}) {
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    tops = Array.from(cells.density,densityColor);
+    tops = Array.from(cells.magnitude,populationColor);
     groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;
