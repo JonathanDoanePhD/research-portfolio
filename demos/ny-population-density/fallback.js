@@ -1,7 +1,7 @@
 import { createLayers } from './layers.js?v=studio-map';
 import { populationColor, populationStops } from './population-colors.js?v=relative-population-colors';
 import { flatLightPosition, groundShadow } from './studio-light.js';
-import { makeTowerOcclusion } from './geography-depth.js';
+import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=overlay-height';
 import { groundHeight } from './terrain.js';
 
 const fmt = new Intl.NumberFormat('en-US');
@@ -222,6 +222,7 @@ export function startCanvasMap({meta, layerData}) {
     visible.length = 0;
     let lastColor;
     const occlusion = overlays.showGeography ? makeTowerOcclusion(width) : null;
+    const minHeight = minimumOcclusionHeight(cells.peakHeight * multiplier);
     for (const i of order) {
       const dx = cells.x[i] - centerX;
       const dz = cells.z[i] - centerZ;
@@ -229,7 +230,8 @@ export function startCanvasMap({meta, layerData}) {
       if (x < -30 || x > width + 30) continue;
       const base = overlays.showElevation ? groundLevels[i] : 0;
       const y = tall / 2 + ((dx*sin + dz*cos) * tiltSin - base*tiltCos) * scale;
-      const top = y - cells.elevation[i] * multiplier * tiltCos * scale;
+      const towerHeight = cells.elevation[i] * multiplier;
+      const top = y - towerHeight * tiltCos * scale;
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
@@ -263,9 +265,9 @@ export function startCanvasMap({meta, layerData}) {
       screenTop[i] = top;
       radii[i] = radius;
       visible.push(i);
-      if (occlusion) {
+      if (occlusion && towerHeight >= minHeight) {
         const depth = (dx*sin+dz*cos)*tiltCos + base*tiltSin;
-        occlusion.add(x,y,top,radius,depth,depth+cells.elevation[i]*multiplier*tiltSin,capHeight/2);
+        occlusion.add(x,y,top,radius,depth,depth+towerHeight*tiltSin,capHeight/2);
       }
     }
     context.globalAlpha = 1;

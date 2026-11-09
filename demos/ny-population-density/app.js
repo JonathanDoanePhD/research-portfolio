@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=relative-population-colors';
+import { startCanvasMap } from './fallback.js?v=overlay-height';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
 import { colorChannels, mountPopulationLegend, populationFraction, populationStops } from './population-colors.js?v=relative-population-colors';
 import { studio } from './studio-light.js';
-import { makeTowerOcclusion } from './geography-depth.js';
+import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=overlay-height';
 import { groundHeight } from './terrain.js';
 
 const stage = document.querySelector('#stage');
@@ -147,6 +147,7 @@ function wireGranularity(levels, grids, renderGrid) {
     for (let i=0;i<cells.count;i++) {
       cells.elevation[i] = 112*populationFraction(cells.population[i],heightScale.value);
     }
+    cells.peakHeight = 112*populationFraction(cells.largest,heightScale.value);
     largestLabel.textContent = number.format(cells.largest);
     colorRange.textContent = `${number.format(cells.smallest)} to ${number.format(cells.largest)} people per hexagon`;
     renderGrid(cells);
@@ -336,11 +337,12 @@ async function start() {
     const h = stage.clientHeight;
     const screenScale = w * camera.zoom / (camera.right-camera.left);
     const index = makeTowerOcclusion(w);
+    const minHeight = minimumOcclusionHeight(cells.peakHeight * multiplier);
     for (let i=0;i<cells.count;i++) {
+      const towerHeight = cells.elevation[i]*multiplier;
+      if (towerHeight < minHeight || towerHeight*screenScale < 2) continue;
       const y = terrainWasVisible ? groundLevels[i] : 0;
       const radius = cells.radius[i]*screenScale;
-      const towerHeight = cells.elevation[i]*multiplier;
-      if (radius < 2 && towerHeight*screenScale < 1.5) continue;
       projectedBase.set(cells.x[i],y,cells.z[i]).project(camera);
       projectedTop.set(cells.x[i],y+towerHeight,cells.z[i]).project(camera);
       const x = (projectedBase.x+1)*w/2;

@@ -1,10 +1,15 @@
+// Use a relative height cutoff so broad, low columns in coarse grids leave geography visible.
+export function minimumOcclusionHeight(peakHeight) {
+  return peakHeight * .2;
+}
+
 // Compare geography and tower silhouettes in screen space. Larger depth is closer.
 export function makeTowerOcclusion(width) {
   const binWidth = 12;
   const bins = Array.from({length:Math.ceil(width/binWidth)+1},()=>[]);
   return {
     add(x,base,top,radius,baseDepth,topDepth,capRadius) {
-      if (base-top < 1.5 && radius < 2) return;
+      if (base-top < 2) return;
       const first = Math.max(0,Math.floor((x-radius)/binWidth));
       const last = Math.min(bins.length-1,Math.floor((x+radius)/binWidth));
       const tower = {x,base,top,radius,baseDepth,topDepth,capRadius};

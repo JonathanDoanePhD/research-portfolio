@@ -12,7 +12,7 @@
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=relative-population-colors').catch(error => {
+    import('./app.js?v=overlay-height').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -88,7 +88,7 @@
       <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every level uses the same height scale, so a larger population produces a taller tower. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Hover or tap a cell to see its population and density.</p>
       <p>Colors use the population range of the selected granularity. Yellow at 0% represents the least populated hexagon, and red at 100% represents the most populated. Percentages measure position between those two counts. Each tower starts in yellow and ends at the color for its population.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
-      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries, and <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
+      <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-fifth as tall as the tallest tower at the current granularity. Use <strong>Elevation</strong> to raise the shaded terrain beneath the population towers. The terrain is vertically exaggerated 14× for readability. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
       <p>Sources: <a href="https://www.kontur.io/datasets/population-dataset/">Kontur Population</a> (CC BY) and <a href="https://www.census.gov/geographies/mapping-files/2020/geo/cartographic-boundary-file.html">U.S. Census Bureau cartographic boundaries</a>. Elevation is from <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP</a>, sampled at approximately 1 km. See the <a href="https://github.com/JonathanDoanePhD/research-portfolio/tree/main/site/demos/ny-population-density#geographic-overlays">geographic data sources</a>.</p>
     </details>
   </main>
