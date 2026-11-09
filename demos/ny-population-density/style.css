@@ -106,6 +106,9 @@ body.map-expanded{overflow:hidden}
 
 
 @media(min-width:721px){
+  body{display:grid;grid-template-rows:auto minmax(min-content,1fr) auto;height:100svh}
+  main.wrap{display:grid;grid-template-rows:auto minmax(min-content,1fr) auto auto}
+  .map-card{display:grid;grid-template-rows:auto auto minmax(235px,1fr) auto}
   .topbar{min-height:36px}
   .brand img{width:25px;height:25px}
   .intro{padding:6px 0}
@@ -120,5 +123,5 @@ body.map-expanded{overflow:hidden}
   .readout span{font-size:1.08rem}
   .readout p{font-size:.75rem}
   .footer{padding:5px 0 7px}
-  #stage{height:clamp(310px,calc(100svh - 300px),830px)}
+  #stage{height:auto}
 }
