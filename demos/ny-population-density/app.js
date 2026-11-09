@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=fixed-population';
+import { startCanvasMap } from './fallback.js?v=orange-white-blue';
 import { createLayers, readLayers } from './layers.js?v=studio-map';
-import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=fixed-population';
+import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=orange-white-blue';
 import { studio } from './studio-light.js';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
@@ -55,24 +55,28 @@ document.addEventListener('keydown',event => {
 function towerMaterial() {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
   const stopCount = populationStops.length;
+  const positions = {value:Float32Array.from(populationStops,([at]) => at)};
   const colors = {value:populationStops.map(([,color]) =>
     new THREE.Vector3(...colorChannels(color).map(channel => channel/255))
   )};
   material.onBeforeCompile = shader => {
     shader.uniforms.rampColors = colors;
+    shader.uniforms.rampPositions = positions;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float towerColorFraction;\nvarying float populationAtHeight;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerColorFraction * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         varying float populationAtHeight;
+        uniform float rampPositions[${stopCount}];
         uniform vec3 rampColors[${stopCount}];
         vec3 populationGradient(float d) {
-          float position = clamp(d, 0.0, 1.0) * ${stopCount-1}.0;
+          float position = clamp(d, 0.0, 1.0);
           vec3 c = rampColors[0];
           for (int i=1; i<${stopCount}; i++) {
-            if (position <= float(i)) {
-              c = mix(rampColors[i-1], rampColors[i], position-float(i-1));
+            if (position <= rampPositions[i]) {
+              float weight = (position-rampPositions[i-1])/(rampPositions[i]-rampPositions[i-1]);
+              c = mix(rampColors[i-1], rampColors[i], weight);
               break;
             }
             c = rampColors[i];

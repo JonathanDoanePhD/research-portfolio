@@ -1,13 +1,21 @@
 const maxPopulation = 3036828;
 
-export const maxColorPopulation = 120000;
+export const maxColorPopulation = maxPopulation;
 
-// Use the portfolio's green, orange, and purple tones in a fixed population ramp.
-export const populationStops = [
-  '#38815e', '#ffffff', '#d97732', '#ab2940',
-  ...Array(7).fill('#654697'),
-  '#c3b2d9', '#ffffff',
-].map((color,index,colors) => [index/(colors.length-1),color]);
+const brackets = [
+  [0, '0', '#df631e'],
+  [100, '100', '#e47130'],
+  [500, '500', '#e98144'],
+  [2500, '2.5k', '#efa16b'],
+  [5000, '5k', '#f4b98f'],
+  [10000, '10k', '#fad5b9'],
+  [50000, '50k', '#ffffff'],
+  [250000, '250k', '#c5d8ea'],
+  [1000000, '1M', '#6495c0'],
+  [maxColorPopulation, '3M', '#124576'],
+];
+
+export const populationStops = brackets.map(([population,,color]) => [population/maxColorPopulation,color]);
 
 export function populationFraction(population,scale) {
   const fraction = Math.max(0,Math.min(1,population/maxPopulation));
@@ -25,16 +33,19 @@ function mixColors(a,b,fraction) {
 const channels = populationStops.map(([,color]) => colorChannels(color));
 
 export function populationColor(fraction) {
-  const position = Math.max(0,Math.min(1,fraction)) * (channels.length-1);
-  const lower = Math.min(Math.floor(position),channels.length-2);
-  return mixColors(channels[lower],channels[lower+1],position-lower);
+  const t = Math.max(0,Math.min(1,fraction));
+  let upper = 1;
+  while (upper < populationStops.length-1 && t > populationStops[upper][0]) upper++;
+  const start = populationStops[upper-1][0];
+  const end = populationStops[upper][0];
+  return mixColors(channels[upper-1],channels[upper],(t-start)/(end-start));
 }
 
 export function mountPopulationLegend(legend) {
-  for (const [at] of populationStops) {
+  for (const [population,label] of brackets) {
     const entry = document.createElement('li');
-    const population = Math.round(at*maxColorPopulation/1000);
-    entry.textContent = population === 0 ? '0' : `${population}k${at === 1 ? '+' : ''}`;
+    entry.textContent = label;
+    entry.setAttribute('aria-label', `${population.toLocaleString('en-US')} people per hexagon`);
     legend.append(entry);
   }
   legend.style.setProperty('--population-gradient',

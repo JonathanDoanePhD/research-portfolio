@@ -87,8 +87,8 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 #elevation-ticks{display:flex;justify-content:space-between;gap:5px;color:var(--slate);font-size:.61rem}
 @media(max-width:640px){.layer-controls{padding:7px 10px}.elevation-legend{top:8px;right:8px}.geo-label{font-size:9.5px}}
 
-#population-bands{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));position:relative;gap:0;padding-top:10px;width:min(455px,calc(100vw - 62px));margin-top:4px}
-#population-bands::before{content:"";position:absolute;top:0;left:3.846%;right:3.846%;height:7px;border-radius:3px;background:var(--population-gradient);box-shadow:inset 0 0 0 1px var(--line)}
+#population-bands{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));position:relative;gap:0;padding-top:10px;width:min(380px,calc(100vw - 62px));margin-top:4px}
+#population-bands::before{content:"";position:absolute;top:0;left:5%;right:5%;height:7px;border-radius:3px;background:var(--population-gradient);box-shadow:inset 0 0 0 1px var(--line)}
 #population-bands li{text-align:center;font-variant-numeric:tabular-nums}
 .elevation-legend small{display:block;color:var(--slate);font-size:.64rem}
 
@@ -103,4 +103,3 @@ body.map-expanded{overflow:hidden}
 .map-card.is-expanded #stage{flex:1;min-height:0;height:auto}
 
 #population-bands li{font-size:clamp(.53rem,1.4vw,.64rem)}
-@media(max-width:410px){#population-bands li:nth-child(even){visibility:hidden}}

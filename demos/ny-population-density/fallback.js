@@ -1,5 +1,5 @@
 import { createLayers } from './layers.js?v=studio-map';
-import { populationColor, populationStops } from './population-colors.js?v=fixed-population';
+import { populationColor, populationStops } from './population-colors.js?v=orange-white-blue';
 import { flatLightPosition, groundShadow } from './studio-light.js';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
@@ -25,14 +25,6 @@ export function startCanvasMap({meta, layerData}) {
     labels: document.querySelector('#labels'),
     tip: document.querySelector('#tip'),
   };
-  const colorStrip = document.createElement('canvas');
-  colorStrip.width = 1;
-  colorStrip.height = 4096;
-  const strip = colorStrip.getContext('2d');
-  const gradient = strip.createLinearGradient(0,0,0,colorStrip.height);
-  for (const [at,color] of populationStops) gradient.addColorStop(1-at,color);
-  strip.fillStyle = gradient;
-  strip.fillRect(0,0,1,colorStrip.height);
   let cells;
   let tops;
   let groundLevels;
@@ -235,20 +227,19 @@ export function startCanvasMap({meta, layerData}) {
       if (y < -20 || top > tall + 20) continue;
       const radius = Math.max(.43, cells.radius[i] * scale * .94);
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
-      if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       if (y - top > .8) {
         const fraction = cells.colorFraction[i];
-        if (fraction > 0) {
-          const rampHeight = Math.min(1,fraction);
-          const sourceHeight = colorStrip.height * rampHeight;
-          const gradientTop = y - (y-top) * (rampHeight/fraction);
-          if (gradientTop > top) context.fillRect(x-radius,top,radius*2,gradientTop-top);
-          context.drawImage(colorStrip,0,colorStrip.height-sourceHeight,1,sourceHeight,
-                            x-radius,gradientTop,radius*2,y-gradientTop);
-        } else {
-          context.fillRect(x-radius,top,radius*2,y-top);
+        const gradient = context.createLinearGradient(0,y,0,top);
+        for (const [at,color] of populationStops) {
+          if (at >= fraction) break;
+          gradient.addColorStop(at/fraction,color);
         }
+        gradient.addColorStop(1,tops[i]);
+        context.fillStyle = gradient;
+        context.fillRect(x-radius,top,radius*2,y-top);
+        lastColor = null;
       }
+      if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       const capHeight = Math.max(.85, 2 * radius * tiltSin);
       if (radius < 1.6) {
         context.fillRect(x-radius, top-capHeight/2, radius*2, capHeight);
