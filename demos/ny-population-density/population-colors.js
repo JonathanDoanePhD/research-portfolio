@@ -3,16 +3,12 @@ const maxPopulation = 3036828;
 export const maxColorPopulation = 30000;
 
 const brackets = [
-  [0, '0', '#f3d8bb'],
-  [100, '100', '#f1be94'],
-  [500, '500', '#ed9a5e'],
-  [1500, '1.5k', '#d55421'],
-  [2500, '2.5k', '#fffaf5'],
-  [4000, '4k', '#b9d8e8'],
-  [6500, '6.5k', '#6ca9c2'],
-  [12000, '12k', '#347fb7'],
-  [22000, '22k', '#24568d'],
-  [maxColorPopulation, '30k+', '#142a62'],
+  [0, '0', '#38815e'],
+  [1000, '1k', '#ffffff'],
+  [2000, '2k', '#d97732'],
+  [5000, '5k', '#d97732'],
+  [20000, '20k', '#ab2940'],
+  [maxColorPopulation, '30k+', '#ffffff'],
 ];
 
 export const populationStops = brackets.map(([population,,color]) => [population/maxColorPopulation,color]);
