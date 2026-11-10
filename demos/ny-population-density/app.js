@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js?v=anchored-zoom';
-import { startCanvasMap } from './fallback.js?v=anchored-zoom';
-import { createLayers, readLayers } from './layers.js?v=terrain-base';
+import { startCanvasMap } from './fallback.js?v=adk-roads';
+import { createLayers, readLayers } from './layers.js?v=adk-roads';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
@@ -192,7 +192,7 @@ function stateBase(polygons) {
 async function start() {
   const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json?v=adirondack-labels', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=adk-roads', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
@@ -390,7 +390,7 @@ async function start() {
       }
       updateLight();
       renderer.render(scene, camera);
-      if (overlays.showGeography) overlays.render(project,towerOcclusion());
+      if (overlays.showOverlay) overlays.render(project,towerOcclusion());
       for (const place of meta.places) {
         point.set(place.x, surfaceAt(place.x,place.z) + (flat ? 0 : place.peak * multiplier + 2), place.z).project(camera);
         const x = (point.x + 1) * stage.clientWidth / 2;

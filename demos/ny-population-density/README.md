@@ -22,3 +22,9 @@ Wheel zoom follows the pointer, and touch zoom follows the midpoint of a pinch. 
 The base map is colored by elevation. **Elevation relief** raises the ground beneath the towers. Terrain heights are sampled on a roughly 4 km mesh and exaggerated 14×. Each tower starts at the terrain height sampled at its center. Tower height above the terrain represents population. Tooltips show population and density. Viewing the layers together lets you compare settlement patterns with elevation.
 
 To rebuild, export the 3DEP GeoTIFF as `3dep.tif` using EPSG:5070, extent `1320000,2144000,1998000,2664000`, size `678,520`, and bilinear resampling. Export the listed feature geometries as EPSG:5070 GeoJSON, using the filenames in `build_geography.py`. Run `python3 build_geography.py SOURCES data` with GDAL Python bindings, NumPy, and Pillow installed.
+
+## Adirondack road loops
+
+The **Adirondack road loops** toggle shows the large Long Lake–High Peaks loop, the Elizabethtown loop, and the Wilmington–Jay loop. Where highways share pavement, the map follows the shared centerline. The lines are generalized for the visualization.
+
+Road geometry comes from the [NYSDOT State Touring Inventory](https://gisdev.dot.ny.gov/hostingny/rest/services/Roadways/RoadwayData/FeatureServer/1). To regenerate the overlay, export the nine signed routes as Esri JSON in EPSG:5070, intersecting the WGS84 envelope `-74.7,43.57,-73.50,44.49`. Keep `Route_Display_Value`, `Route_ID`, and `From_Measure`. Run `python3 build_road_loops.py roads.json data/road-loops.json` with GDAL Python bindings.

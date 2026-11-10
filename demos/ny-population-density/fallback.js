@@ -1,4 +1,4 @@
-import { createLayers } from './layers.js?v=terrain-base';
+import { createLayers } from './layers.js?v=adk-roads';
 import { makePopulationColor } from './population-colors.js?v=palette-editor';
 import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
@@ -249,7 +249,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
-    const occlusion = overlays.showGeography ? makeTowerOcclusion(width) : null;
+    const occlusion = overlays.showOverlay ? makeTowerOcclusion(width) : null;
     const minHeight = minimumOcclusionHeight(cells.peakHeight * multiplier);
     for (const i of order) {
       const dx = cells.x[i] - centerX;

@@ -3,7 +3,7 @@ import { loadTerrain } from './terrain.js';
 const svgNS = 'http://www.w3.org/2000/svg';
 const svgNode = name => document.createElementNS(svgNS, name);
 
-export async function readLayers() {
+async function readGeography() {
   try {
     const response = await fetch('data/geography.json');
     if (!response.ok) throw new Error(`Could not load geographic overlays (HTTP ${response.status}).`);
@@ -20,26 +20,53 @@ export async function readLayers() {
   }
 }
 
+async function readRoads() {
+  try {
+    const response = await fetch('data/road-loops.json');
+    if (!response.ok) throw new Error(`Could not load road loops (HTTP ${response.status}).`);
+    return await response.json();
+  } catch (error) {
+    console.warn(error);
+    return [];
+  }
+}
+
+export async function readLayers() {
+  const [geography, roads] = await Promise.all([readGeography(),readRoads()]);
+  return {...geography,roads};
+}
+
 export function createLayers(data, redraw) {
   const overlay = document.querySelector('#geographic-overlay');
   const geographyToggle = document.querySelector('#show-geography');
+  const roadToggle = document.querySelector('#show-roads');
   const elevationToggle = document.querySelector('#show-elevation');
   const elevationLegend = document.querySelector('#elevation-legend');
   const reliefNote = document.querySelector('#relief-note');
+  const geographyGroup = svgNode('g');
+  const roadGroup = svgNode('g');
+  overlay.append(roadGroup,geographyGroup);
+  const roadEntries = data.roads.map(line => {
+    const path = svgNode('path');
+    path.setAttribute('class','geo-line geo-road');
+    roadGroup.append(path);
+    return {feature:{paths:[line]},path};
+  });
   const entries = data.features.map(feature => {
     const path = svgNode('path');
     path.setAttribute('class', `geo-line geo-${feature.kind}`);
-    overlay.append(path);
+    geographyGroup.append(path);
     const label = svgNode('text');
     label.setAttribute('class', `geo-label geo-${feature.kind}`);
     label.textContent = feature.name;
-    overlay.append(label);
     return {feature, path, label};
   });
   // Put labels above all linework.
-  for (const {label} of entries) overlay.append(label);
+  for (const {label} of entries) geographyGroup.append(label);
 
   geographyToggle.checked = false;
+  roadToggle.checked = false;
+  roadToggle.disabled = !roadEntries.length;
   elevationToggle.checked = false;
   geographyToggle.disabled = !entries.length;
   elevationToggle.disabled = !data.elevation?.image;
@@ -56,20 +83,26 @@ export function createLayers(data, redraw) {
     }
   }
   function sync() {
-    overlay.classList.toggle('is-visible', geographyToggle.checked);
+    overlay.classList.toggle('is-visible', geographyToggle.checked || roadToggle.checked);
+    geographyGroup.style.display = geographyToggle.checked ? '' : 'none';
+    roadGroup.style.display = roadToggle.checked ? '' : 'none';
     reliefNote.hidden = !elevationToggle.checked;
     redraw();
   }
   geographyToggle.addEventListener('change', sync);
   elevationToggle.addEventListener('change', sync);
+  roadToggle.addEventListener('change', sync);
 
   return {
     terrain,
     get showElevation() { return elevationToggle.checked; },
-    get showGeography() { return geographyToggle.checked; },
+    get showOverlay() { return geographyToggle.checked || roadToggle.checked; },
     render(project, hidden) {
-      if (!geographyToggle.checked) return;
-      for (const {feature, path, label} of entries) {
+      const active = [
+        ...(roadToggle.checked ? roadEntries : []),
+        ...(geographyToggle.checked ? entries : []),
+      ];
+      for (const {feature, path, label} of active) {
         let d = '';
         for (const line of feature.paths) {
           let previous;
@@ -93,6 +126,7 @@ export function createLayers(data, redraw) {
           }
         }
         path.setAttribute('d', d);
+        if (!label) continue;
         const [x,y,depth] = project(...feature.anchor);
         label.style.visibility = hidden?.(x,y-5,depth) || hidden?.(x,y,depth) ? 'hidden' : 'visible';
         label.setAttribute('x', x.toFixed(1));

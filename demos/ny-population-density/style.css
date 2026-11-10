@@ -79,6 +79,7 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 .geo-line.geo-region{stroke:#73503e;stroke-dasharray:3 4}
 .geo-line.geo-river,.geo-line.geo-canal{stroke:#174a77;filter:drop-shadow(0 0 1px #fff)}
 .geo-line.geo-canal{stroke:#285e76;stroke-dasharray:3 2}
+.geo-line.geo-road{stroke:#742a83;stroke-width:2.2;filter:drop-shadow(0 0 1px #fff)}
 .geo-label{font:700 9px Arial,sans-serif;text-anchor:middle;paint-order:stroke;stroke:#ffffffa6;stroke-width:2px;stroke-linejoin:round;fill:#183f57;opacity:.85}
 .geo-label.geo-park{fill:#315640}
 .geo-label.geo-region{fill:#684633}
