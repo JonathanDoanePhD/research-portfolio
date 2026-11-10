@@ -364,9 +364,9 @@ export function startCanvasMap({meta, layerData, palette}) {
     controls.tip.hidden = true;
   }
 
-  function pan(dx,dy) {
-    const sx = dx / scale;
-    const vertical = dy/scale;
+  function pan(dx,dy,pixelScale = scale) {
+    const sx = dx/pixelScale;
+    const vertical = dy/pixelScale;
     const sz = vertical*tiltSin;
     centerY += vertical*tiltCos;
     centerX -= sx*cos + sz*sin;
@@ -374,13 +374,42 @@ export function startCanvasMap({meta, layerData, palette}) {
   }
 
   let drag;
+  const touches = new Map();
+  let pinch;
+
+  function pinchState() {
+    const [a,b] = touches.values();
+    return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)};
+  }
+
   canvas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') {
+      touches.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
+      if (touches.size >= 2) {
+        canvas.setPointerCapture(e.pointerId);
+        pinch = pinchState();
+        drag = null;
+        return;
+      }
+    }
     if (drag) return;
     hoverCity.hide();
     canvas.setPointerCapture(e.pointerId);
     drag = {id:e.pointerId, x:e.offsetX, y:e.offsetY, distance:0, pan:flat || e.button === 2 || e.shiftKey};
   });
   canvas.addEventListener('pointermove', e => {
+    if (touches.has(e.pointerId)) {
+      touches.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
+      if (pinch) {
+        if (touches.size >= 2) {
+          const next = pinchState();
+          const factor = pinch.distance > 0 && next.distance > 0 ? next.distance/pinch.distance : 1;
+          changeZoom(factor,pinch.x,pinch.y,next.x,next.y);
+          pinch = next;
+        }
+        return;
+      }
+    }
     if (!drag) {
       if (e.pointerType === 'mouse') {
         if (hoverCity.show(e.offsetX,e.offsetY)) controls.tip.hidden = true;
@@ -401,24 +430,38 @@ export function startCanvasMap({meta, layerData, palette}) {
     }
     queue();
   });
-  canvas.addEventListener('pointerup', e => {
+  function endPointer(e, canPick) {
+    if (touches.delete(e.pointerId) && pinch) {
+      if (!touches.size) pinch = null;
+      else if (touches.size >= 2) pinch = pinchState();
+      return;
+    }
     if (drag?.id !== e.pointerId) return;
-    if (drag.distance < 4 && e.button === 0) pick(e.offsetX,e.offsetY);
+    if (canPick && drag.distance < 4 && e.button === 0) pick(e.offsetX,e.offsetY);
     drag = null;
-  });
-  canvas.addEventListener('pointercancel', () => { drag = null; });
+  }
+  canvas.addEventListener('pointerup', e => endPointer(e,true));
+  canvas.addEventListener('pointercancel', e => endPointer(e,false));
+  canvas.addEventListener('lostpointercapture', e => endPointer(e,false));
   canvas.addEventListener('pointerleave', () => {
     hoverCity.hide();
     if (!drag) controls.tip.hidden = true;
   });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  function changeZoom(factor) {
+  function changeZoom(factor,x,y,nextX=x,nextY=y) {
+    const previous = zoom;
     zoom = Math.max(.7,Math.min(45,zoom*factor));
+    if (x !== undefined) {
+      const centerX = stage.clientWidth/2;
+      const centerY = stage.clientHeight/2;
+      const ratio = zoom/previous;
+      pan(nextX-centerX-(x-centerX)*ratio,nextY-centerY-(y-centerY)*ratio,measure()*zoom);
+    }
     queue();
   }
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    changeZoom(Math.exp(Math.max(-100,Math.min(100,-e.deltaY))*.004));
+    changeZoom(Math.exp(Math.max(-100,Math.min(100,-e.deltaY))*.004),e.offsetX,e.offsetY);
   }, {passive:false});
   canvas.addEventListener('keydown', e => {
     const movement = {ArrowLeft:[35,0],ArrowRight:[-35,0],ArrowUp:[0,35],ArrowDown:[0,-35]}[e.key];

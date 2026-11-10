@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=taller-towers';
+import { OrbitControls } from './vendor/OrbitControls.js?v=anchored-zoom';
+import { startCanvasMap } from './fallback.js?v=anchored-zoom';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
@@ -238,6 +238,7 @@ async function start() {
   const controls = new OrbitControls(camera, canvas);
   controls.minZoom = 0.7;
   controls.maxZoom = 45;
+  controls.zoomToCursor = true;
   controls.maxPolarAngle = Math.PI / 2;
   controls.listenToKeyEvents(canvas);
 

@@ -665,7 +665,7 @@ class OrbitControls extends EventDispatcher {
 
 		function handleMouseDownDolly( event ) {
 
-			updateZoomParameters( event.clientX, event.clientX );
+			updateZoomParameters( event.clientX, event.clientY );
 			dollyStart.set( event.clientX, event.clientY );
 
 		}
@@ -969,7 +969,9 @@ class OrbitControls extends EventDispatcher {
 			const centerX = ( event.pageX + position.x ) * 0.5;
 			const centerY = ( event.pageY + position.y ) * 0.5;
 
-			updateZoomParameters( centerX, centerY );
+			// Pointer positions are stored in page coordinates; zoom uses the viewport.
+			updateZoomParameters( centerX - ( event.pageX - event.clientX ),
+				centerY - ( event.pageY - event.clientY ) );
 
 		}
 
