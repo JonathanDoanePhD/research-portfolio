@@ -1,6 +1,6 @@
 import { createLayers } from './layers.js?v=adk-roads';
 import { makePopulationColor } from './population-colors.js?v=palette-editor';
-import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
+import { flatLightPosition, shadowReach } from './studio-light.js?v=shadow-toggle';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
@@ -25,6 +25,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     flat: document.querySelector('#view-flat'),
     height: document.querySelector('#height'),
     heightFactor: document.querySelector('#height-factor'),
+    shadows: document.querySelector('#show-shadows'),
     reset: document.querySelector('#reset'),
     hint: document.querySelector('#controls-hint'),
     places: document.querySelector('#place-buttons'),
@@ -191,21 +192,27 @@ export function startCanvasMap({meta, layerData, palette}) {
   }
 
   function drawShadows(width,tall,multiplier) {
-    if (multiplier === 0 || overlays.showElevation) return;
+    if (!controls.shadows.checked || multiplier === 0 || overlays.showElevation) return;
     const [lx,lightY,lz] = flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos);
     const ly = lightY+centerY;
     if (ly <= 0) return;
+    const [lightX,lightZ] = project(lx,lz,0);
     context.beginPath();
     for (const i of order) {
-      // Shadows from a tower near or above the light extend beyond the view.
-      const h = Math.min(cells.elevation[i]*multiplier,ly*.98);
+      const h = cells.elevation[i]*multiplier;
       if (h*scale < .20) continue;
       const [x,y] = project(cells.x[i],cells.z[i],0);
-      const [endX,endY] = project(...groundShadow(cells.x[i],cells.z[i],h,lx,ly,lz),0);
-      const length = Math.hypot(endX-x,endY-y);
+      const dx = x-lightX, dy = y-lightZ;
+      const run = Math.hypot(dx,dy);
+      if (run < .01) continue;
+      const limit = Math.hypot(Math.max(Math.abs(x),Math.abs(width-x)),
+                               Math.max(Math.abs(y),Math.abs(tall-y)))+2;
+      const reach = shadowReach(h,ly,run,limit);
+      const length = run*reach;
       if (length<.65) continue;
+      const endX = x+dx*reach, endY = y+dy*reach;
       const radius = Math.max(.42,cells.radius[i]*scale*.91);
-      const endRadius = radius*ly/Math.max(1,ly-h);
+      const endRadius = radius*(1+reach);
       if (Math.max(x,endX)+endRadius<0 || Math.min(x,endX)-endRadius>width ||
           Math.max(y,endY)+endRadius<0 || Math.min(y,endY)-endRadius>tall) continue;
       const nx = -(endY-y)/length;
@@ -216,7 +223,7 @@ export function startCanvasMap({meta, layerData, palette}) {
       context.lineTo(x-nx*radius,y-ny*radius);
       context.closePath();
     }
-    context.fillStyle = 'rgba(20,43,62,.24)';
+    context.fillStyle = 'rgba(20,43,62,.30)';
     context.fill();
   }
 
@@ -489,7 +496,8 @@ export function startCanvasMap({meta, layerData, palette}) {
     queue();
   };
   controls.heightFactor.addEventListener('change',queue);
-  [controls.relief,controls.flat,controls.reset,controls.height,controls.heightFactor].forEach(control => { control.disabled = false; });
+  controls.shadows.addEventListener('change',queue);
+  [controls.relief,controls.flat,controls.reset,controls.height,controls.heightFactor,controls.shadows].forEach(control => { control.disabled = false; });
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;

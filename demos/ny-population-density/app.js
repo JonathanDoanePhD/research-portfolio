@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js?v=anchored-zoom';
-import { startCanvasMap } from './fallback.js?v=high-tower-fit';
+import { startCanvasMap } from './fallback.js?v=shadow-toggle';
 import { createLayers, readLayers } from './layers.js?v=adk-roads';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
-import { studio } from './studio-light.js?v=green-base';
+import { studio, visibleGroundBounds } from './studio-light.js?v=shadow-toggle';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
@@ -17,6 +17,7 @@ const labels = document.querySelector('#labels');
 const places = document.querySelector('#place-buttons');
 const height = document.querySelector('#height');
 const heightFactor = document.querySelector('#height-factor');
+const showShadows = document.querySelector('#show-shadows');
 const view3D = document.querySelector('#view-3d');
 const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
@@ -193,7 +194,7 @@ function stateBase(polygons) {
 async function start() {
   const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json?v=adk-roads', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=shadow-towns', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
@@ -207,8 +208,8 @@ async function start() {
     wireGranularity(levels, grids, startCanvasMap({meta, layerData, palette}));
     return;
   }
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = showShadows.checked;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
@@ -218,17 +219,19 @@ async function start() {
   stage.prepend(canvas);
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 1.5));
-  const sun = new THREE.SpotLight(0xffffff,2.4,0,.65,.24,0);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048,2048);
+  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xb0c4d5, 1.35));
+  const sun = new THREE.SpotLight(0xffffff,2.55,0,.65,0,0);
+  sun.castShadow = showShadows.checked;
+  const shadowResolution = Math.min(4096,renderer.capabilities.maxTextureSize);
+  sun.shadow.mapSize.set(shadowResolution,shadowResolution);
+  sun.shadow.radius = .75;
   sun.shadow.camera.near = 12;
   sun.shadow.camera.far = 2800;
   sun.shadow.normalBias = .08;
   scene.add(sun.target);
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(1600, 1600),
-    new THREE.ShadowMaterial({color:0x17364f, opacity:.22, depthWrite:false})
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.ShadowMaterial({color:0x17364f, opacity:.29, depthWrite:false})
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -4.4;
@@ -313,6 +316,7 @@ async function start() {
   let reliefWasEnabled = false;
   const previousLight = new THREE.Vector3(Infinity,Infinity,Infinity);
   const lightPoint = new THREE.Vector3();
+  const viewCorners = Array.from({length:8},() => new THREE.Vector3());
   const projectedBase = new THREE.Vector3();
   const projectedTop = new THREE.Vector3();
   const overlays = createLayers(layerData, queueDraw);
@@ -372,10 +376,29 @@ async function start() {
     camera.updateMatrixWorld();
     const distance = camera.position.distanceTo(controls.target);
     lightPoint.set(studio.x,studio.y,studio.z-distance).applyMatrix4(camera.matrixWorld);
-    if (previousLight.distanceToSquared(lightPoint)<.001 && sun.target.position.distanceToSquared(controls.target)<.001) return;
+    const floor = ground.position.y;
+    viewCorners.forEach((corner,i) => corner.set(i & 1 ? 1 : -1,i & 2 ? 1 : -1,i & 4 ? 1 : -1).unproject(camera));
+    const bounds = visibleGroundBounds(viewCorners,floor);
+    ground.visible = showShadows.checked && !!bounds;
+    if (bounds) {
+      ground.position.x = (bounds.left+bounds.right)/2;
+      ground.position.z = (bounds.top+bounds.bottom)/2;
+      ground.scale.set(bounds.right-bounds.left+4,bounds.bottom-bounds.top+4,1);
+    }
+
+    // A downward cone can cover any ground point in the view, even when the camera is panned.
+    const reachX = Math.max(Math.abs(lightPoint.x-(bounds?.left ?? -350)),
+                            Math.abs(lightPoint.x-(bounds?.right ?? 350)));
+    const reachZ = Math.max(Math.abs(lightPoint.z-(bounds?.top ?? -270)),
+                            Math.abs(lightPoint.z-(bounds?.bottom ?? 270)));
+    const angle = Math.min(Math.PI/2-.0001,Math.max(.65,
+      Math.atan2(Math.hypot(reachX,reachZ)+10,Math.max(1,Math.abs(lightPoint.y-floor)-26))));
+    if (previousLight.distanceToSquared(lightPoint)<.001 && Math.abs(sun.angle-angle)<.0001) return;
     previousLight.copy(lightPoint);
     sun.position.copy(lightPoint);
-    sun.target.position.copy(controls.target);
+    sun.target.position.set(lightPoint.x,lightPoint.y+(lightPoint.y>floor ? -1 : 1),lightPoint.z);
+    sun.angle = angle;
+    sun.shadow.camera.far = Math.max(2800,Math.abs(lightPoint.y-floor)+100);
     renderer.shadowMap.needsUpdate = true;
   }
 
@@ -476,6 +499,11 @@ async function start() {
   }
   height.addEventListener('input',applyTowerHeight);
   heightFactor.addEventListener('change',applyTowerHeight);
+  showShadows.addEventListener('change',() => {
+    renderer.shadowMap.enabled = sun.castShadow = showShadows.checked;
+    renderer.shadowMap.needsUpdate = true;
+    queueDraw();
+  });
   canvas.addEventListener('keydown', event => {
     if (event.key !== '+' && event.key !== '=' && event.key !== '-') return;
     event.preventDefault();
@@ -555,7 +583,7 @@ async function start() {
   }
   wireGranularity(levels, grids, updateCells);
 
-  [view3D, viewFlat, reset, height, heightFactor].forEach(control => { control.disabled = false; });
+  [view3D, viewFlat, reset, height, heightFactor, showShadows].forEach(control => { control.disabled = false; });
   status.hidden = true;
   stage.dataset.ready = 'true';
 }
