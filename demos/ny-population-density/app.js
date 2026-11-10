@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=palette-editor';
+import { startCanvasMap } from './fallback.js?v=side-view';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
@@ -234,7 +234,7 @@ async function start() {
   const controls = new OrbitControls(camera, canvas);
   controls.minZoom = 0.7;
   controls.maxZoom = 45;
-  controls.maxPolarAngle = Math.PI * .44;
+  controls.maxPolarAngle = Math.PI / 2;
   controls.listenToKeyEvents(canvas);
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);

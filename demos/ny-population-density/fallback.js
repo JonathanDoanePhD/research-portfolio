@@ -60,6 +60,7 @@ export function startCanvasMap({meta, layerData, palette}) {
   let incline = .67;
   let zoom = 1;
   let centerX = -8;
+  let centerY = 0;
   let centerZ = 1;
   let scale = 1;
   let flat = false;
@@ -131,7 +132,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     const dz = z - centerZ;
     return [
       canvas.clientWidth / 2 + (dx * cos - dz * sin) * scale,
-      canvas.clientHeight / 2 + ((dx * sin + dz * cos) * tiltSin - elevation * tiltCos) * scale,
+      canvas.clientHeight / 2 + ((dx * sin + dz * cos) * tiltSin - (elevation-centerY) * tiltCos) * scale,
     ];
   }
 
@@ -191,7 +192,8 @@ export function startCanvasMap({meta, layerData, palette}) {
 
   function drawShadows(width,tall,multiplier) {
     if (multiplier === 0 || overlays.showElevation) return;
-    const [lx,ly,lz] = flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos);
+    const [lx,lightY,lz] = flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos);
+    const ly = lightY+centerY;
     context.beginPath();
     for (const i of order) {
       const h = cells.elevation[i]*multiplier;
@@ -256,7 +258,7 @@ export function startCanvasMap({meta, layerData, palette}) {
       const x = width / 2 + (dx*cos - dz*sin) * scale;
       if (x < -30 || x > width + 30) continue;
       const base = overlays.showElevation ? groundLevels[i] : 0;
-      const y = tall / 2 + ((dx*sin + dz*cos) * tiltSin - base*tiltCos) * scale;
+      const y = tall / 2 + ((dx*sin + dz*cos) * tiltSin - (base-centerY)*tiltCos) * scale;
       const towerHeight = cells.elevation[i] * multiplier;
       const top = y - towerHeight * tiltCos * scale;
       if (y < -20 || top > tall + 20) continue;
@@ -329,6 +331,7 @@ export function startCanvasMap({meta, layerData, palette}) {
   function choose(place) {
     selected = place;
     centerX = place?.x ?? (flat ? overview.x : -8);
+    centerY = 0;
     centerZ = place?.z ?? (flat ? overview.z : 1);
     zoom = place ? Math.min(40, stage.clientWidth / (measure() * place.distance)) : 1;
     if (place && !flat) centerZ -= 15;
@@ -364,7 +367,9 @@ export function startCanvasMap({meta, layerData, palette}) {
 
   function pan(dx,dy) {
     const sx = dx / scale;
-    const sz = dy / (scale * tiltSin);
+    const vertical = dy/scale;
+    const sz = vertical*tiltSin;
+    centerY += vertical*tiltCos;
     centerX -= sx*cos + sz*sin;
     centerZ -= -sx*sin + sz*cos;
   }
@@ -393,7 +398,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     if (drag.pan) pan(dx,dy);
     else {
       angle -= dx*.007;
-      incline = Math.max(.19,Math.min(Math.PI/2-.001,incline-dy*.004));
+      incline = Math.max(0,Math.min(Math.PI/2-.001,incline-dy*.004));
     }
     queue();
   });
