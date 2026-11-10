@@ -138,3 +138,5 @@ body.map-expanded{overflow:hidden}
 .palette-error:empty{display:none}
 .palette-actions{display:flex;gap:6px;margin-top:7px}
 .palette-actions button{border:1px solid var(--line);border-radius:5px;background:#f6f9fa;color:inherit;padding:2px 6px}
+
+@media(min-width:900px){#height{width:155px}}

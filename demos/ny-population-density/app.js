@@ -1,13 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=side-view';
+import { startCanvasMap } from './fallback.js?v=taller-towers';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
-import { heightMultiplier, scaleTowerHeights } from './tower-heights.js';
 import { mountHoverCities } from './hover-cities.js';
 
 const stage = document.querySelector('#stage');
@@ -139,6 +138,7 @@ async function readGrid(meta) {
 }
 
 function wireGranularity(levels, grids, renderGrid) {
+  const maxTowerPopulation = Math.max(...grids.map(grid => grid.largest));
   const control = document.querySelector('#granularity');
   const areaLabel = document.querySelector('#cell-area');
   const countLabel = document.querySelector('#grid-count');
@@ -150,7 +150,11 @@ function wireGranularity(levels, grids, renderGrid) {
     areaLabel.textContent = `~${area} sq. mi.`;
     control.setAttribute('aria-valuetext', `${index === 0 ? 'Original cells, ' : ''}about ${area} square miles per hexagon`);
     countLabel.textContent = number.format(cells.count);
-    scaleTowerHeights(cells,index,heightScale.value);
+    const heightForPopulation = heightScale.value === 'linear'
+      ? population => 112*population/maxTowerPopulation
+      : population => 112*Math.sqrt(population/maxTowerPopulation);
+    for (let i=0;i<cells.count;i++) cells.elevation[i] = heightForPopulation(cells.population[i]);
+    cells.peakHeight = heightForPopulation(cells.largest);
     largestLabel.textContent = number.format(cells.largest);
     renderGrid(cells);
   }
@@ -262,7 +266,7 @@ async function start() {
   }
 
   const matrix = new THREE.Matrix4();
-  let multiplier = 0;
+  let multiplier = Number(height.value)/100;
   let groundLevels;
   function updateHeights() {
     for (let i = 0; i < cells.count; i++) {
@@ -423,12 +427,6 @@ async function start() {
     queueDraw();
   }
 
-  function updateMultiplier() {
-    const horizontal = Math.hypot(52,550);
-    const verticalProjection = horizontal/Math.hypot(horizontal,476);
-    multiplier = heightMultiplier(height,stage.clientHeight,stage.clientWidth/worldWidth*verticalProjection);
-  }
-
   function resize() {
     const w = stage.clientWidth;
     const h = stage.clientHeight;
@@ -445,8 +443,6 @@ async function start() {
     if (flat && !selected) camera.zoom *= overviewZoom()/oldOverviewZoom;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
-    updateMultiplier();
-    if (groundLevels) updateHeights();
     queueDraw();
   }
   new ResizeObserver(resize).observe(stage);
@@ -460,14 +456,14 @@ async function start() {
   reset.onclick = () => {
     height.value = height.defaultValue;
     height.setAttribute('aria-valuetext',`${height.value}%`);
-    updateMultiplier();
+    multiplier = Number(height.value)/100;
     selected = null;
     flat = false;
     updateHeights();
     moveCamera();
   };
   height.addEventListener('input', () => {
-    updateMultiplier();
+    multiplier = Number(height.value)/100;
     height.setAttribute('aria-valuetext', `${height.value}%`);
     updateHeights();
     tip.hidden = true;

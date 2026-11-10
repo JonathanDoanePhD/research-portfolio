@@ -4,7 +4,6 @@ import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base'
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
-import { heightMultiplier } from './tower-heights.js';
 import { mountHoverCities } from './hover-cities.js';
 
 const fmt = new Intl.NumberFormat('en-US');
@@ -246,7 +245,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     outline(0, '#254634');
     drawTerrain(width,tall);
 
-    const multiplier = heightMultiplier(controls.height,tall,reliefScale()*Math.cos(.67));
+    const multiplier = Number(controls.height.value)/100;
     drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
