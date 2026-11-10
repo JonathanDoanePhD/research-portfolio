@@ -192,7 +192,7 @@ function stateBase(polygons) {
 async function start() {
   const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json?v=city-hover', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=adirondack-labels', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
