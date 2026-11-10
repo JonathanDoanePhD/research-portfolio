@@ -141,3 +141,5 @@ body.map-expanded{overflow:hidden}
 .palette-actions button{border:1px solid var(--line);border-radius:5px;background:#f6f9fa;color:inherit;padding:2px 6px}
 
 @media(min-width:900px){#height{width:155px}}
+
+#height-factor{font-size:.78rem;font-weight:700;color:#245a7a}

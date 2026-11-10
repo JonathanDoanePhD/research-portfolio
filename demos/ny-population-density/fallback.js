@@ -24,6 +24,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     relief: document.querySelector('#view-3d'),
     flat: document.querySelector('#view-flat'),
     height: document.querySelector('#height'),
+    heightFactor: document.querySelector('#height-factor'),
     reset: document.querySelector('#reset'),
     hint: document.querySelector('#controls-hint'),
     places: document.querySelector('#place-buttons'),
@@ -193,9 +194,11 @@ export function startCanvasMap({meta, layerData, palette}) {
     if (multiplier === 0 || overlays.showElevation) return;
     const [lx,lightY,lz] = flatLightPosition(centerX,centerZ,cos,sin,tiltSin,tiltCos);
     const ly = lightY+centerY;
+    if (ly <= 0) return;
     context.beginPath();
     for (const i of order) {
-      const h = cells.elevation[i]*multiplier;
+      // Shadows from a tower near or above the light extend beyond the view.
+      const h = Math.min(cells.elevation[i]*multiplier,ly*.98);
       if (h*scale < .20) continue;
       const [x,y] = project(cells.x[i],cells.z[i],0);
       const [endX,endY] = project(...groundShadow(cells.x[i],cells.z[i],h,lx,ly,lz),0);
@@ -245,7 +248,7 @@ export function startCanvasMap({meta, layerData, palette}) {
     outline(0, '#254634');
     drawTerrain(width,tall);
 
-    const multiplier = Number(controls.height.value)/100;
+    const multiplier = Number(controls.height.value)/100*Number(controls.heightFactor.value);
     drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
@@ -450,7 +453,7 @@ export function startCanvasMap({meta, layerData, palette}) {
   canvas.addEventListener('contextmenu', e => e.preventDefault());
   function changeZoom(factor,x,y,nextX=x,nextY=y) {
     const previous = zoom;
-    zoom = Math.max(.7,Math.min(45,zoom*factor));
+    zoom = Math.max(.12,Math.min(45,zoom*factor));
     if (x !== undefined) {
       const centerX = stage.clientWidth/2;
       const centerY = stage.clientHeight/2;
@@ -477,6 +480,7 @@ export function startCanvasMap({meta, layerData, palette}) {
   controls.reset.onclick = () => {
     selected = null;
     controls.height.value = controls.height.defaultValue;
+    controls.heightFactor.value = '1';
     controls.height.setAttribute('aria-valuetext',`${controls.height.value}%`);
     switchView(false);
   };
@@ -484,7 +488,8 @@ export function startCanvasMap({meta, layerData, palette}) {
     controls.height.setAttribute('aria-valuetext',`${controls.height.value}%`);
     queue();
   };
-  [controls.relief,controls.flat,controls.reset,controls.height].forEach(control => { control.disabled = false; });
+  controls.heightFactor.addEventListener('change',queue);
+  [controls.relief,controls.flat,controls.reset,controls.height,controls.heightFactor].forEach(control => { control.disabled = false; });
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;

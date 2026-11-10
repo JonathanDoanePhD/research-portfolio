@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js?v=anchored-zoom';
-import { startCanvasMap } from './fallback.js?v=adk-roads';
+import { startCanvasMap } from './fallback.js?v=height-factor';
 import { createLayers, readLayers } from './layers.js?v=adk-roads';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
@@ -16,6 +16,7 @@ const hint = document.querySelector('#controls-hint');
 const labels = document.querySelector('#labels');
 const places = document.querySelector('#place-buttons');
 const height = document.querySelector('#height');
+const heightFactor = document.querySelector('#height-factor');
 const view3D = document.querySelector('#view-3d');
 const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
@@ -234,9 +235,9 @@ async function start() {
   ground.receiveShadow = true;
   scene.add(ground, sun, stateBase(meta.outline));
 
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 3000);
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 9500);
   const controls = new OrbitControls(camera, canvas);
-  controls.minZoom = 0.7;
+  controls.minZoom = 0.12;
   controls.maxZoom = 45;
   controls.zoomToCursor = true;
   controls.maxPolarAngle = Math.PI / 2;
@@ -267,7 +268,7 @@ async function start() {
   }
 
   const matrix = new THREE.Matrix4();
-  let multiplier = Number(height.value)/100;
+  let multiplier = Number(height.value)/100*Number(heightFactor.value);
   let groundLevels;
   function updateHeights() {
     for (let i = 0; i < cells.count; i++) {
@@ -414,6 +415,8 @@ async function start() {
     camera.position.set(x + (flat ? .01*Math.sin(overview.angle) : 52),
                         flat ? 770 : 476,
                         z + (flat ? .01*Math.cos(overview.angle) : 550));
+    // Orthographic framing is unchanged by distance, but tall towers need depth clearance.
+    camera.position.sub(controls.target).multiplyScalar(6).add(controls.target);
     camera.zoom = selected ? worldWidth / selected.distance : (flat ? overviewZoom() : 1);
     camera.updateProjectionMatrix();
     controls.enableRotate = !flat;
@@ -456,20 +459,23 @@ async function start() {
   viewFlat.onclick = () => { flat = true; selected = null; moveCamera(); };
   reset.onclick = () => {
     height.value = height.defaultValue;
+    heightFactor.value = '1';
     height.setAttribute('aria-valuetext',`${height.value}%`);
-    multiplier = Number(height.value)/100;
+    multiplier = Number(height.value)/100*Number(heightFactor.value);
     selected = null;
     flat = false;
     updateHeights();
     moveCamera();
   };
-  height.addEventListener('input', () => {
-    multiplier = Number(height.value)/100;
+  function applyTowerHeight() {
+    multiplier = Number(height.value)/100*Number(heightFactor.value);
     height.setAttribute('aria-valuetext', `${height.value}%`);
     updateHeights();
     tip.hidden = true;
     queueDraw();
-  });
+  }
+  height.addEventListener('input',applyTowerHeight);
+  heightFactor.addEventListener('change',applyTowerHeight);
   canvas.addEventListener('keydown', event => {
     if (event.key !== '+' && event.key !== '=' && event.key !== '-') return;
     event.preventDefault();
@@ -549,7 +555,7 @@ async function start() {
   }
   wireGranularity(levels, grids, updateCells);
 
-  [view3D, viewFlat, reset, height].forEach(control => { control.disabled = false; });
+  [view3D, viewFlat, reset, height, heightFactor].forEach(control => { control.disabled = false; });
   status.hidden = true;
   stage.dataset.ready = 'true';
 }

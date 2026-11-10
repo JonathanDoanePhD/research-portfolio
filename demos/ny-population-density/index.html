@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#112a3e">
   <title>New York Population | Jonathan Doane</title>
   <link rel="icon" href="fox.webp" type="image/webp">
-  <link rel="stylesheet" href="style.css?v=adk-roads">
+  <link rel="stylesheet" href="style.css?v=height-factor">
   <script type="importmap">
     {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script type="module">
-    import('./app.js?v=adk-roads').catch(error => {
+    import('./app.js?v=height-factor').catch(error => {
       console.error(error);
       document.querySelector('#status').textContent = 'The map couldn’t load. Try reloading this page.';
     });
@@ -39,6 +39,12 @@
           <button id="view-flat" type="button" aria-pressed="false" disabled>Top down</button>
         </div>
         <label class="height-control" for="height">Tower height <input id="height" type="range" min="0" max="700" value="360" aria-valuetext="360%" disabled></label>
+        <select id="height-factor" aria-label="Tower height multiplier" disabled>
+          <option value="1">1×</option>
+          <option value="2">2×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+        </select>
         <label class="height-control granularity" for="granularity">
           Granularity
           <input id="granularity" type="range" min="0" max="3" step="1" value="0" disabled>
@@ -95,7 +101,7 @@
 
     <details class="method">
       <summary>How to read this map</summary>
-      <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every grid uses the same height scale, so the same population makes a tower the same height at any granularity. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. Scroll over a location to zoom there, or pinch to zoom on a touch screen. Hover or tap a cell to see its population and density. Hover over a city location to reveal additional city names.</p>
+      <p>Each tower shows the estimated number of residents in one hexagon. Moving Granularity to the right adds neighboring cells together. Every grid uses the same height scale, so the same population makes a tower the same height at any granularity. The default square-root scale keeps small cells visible. Choose Linear for directly proportional heights. The multiplier next to Tower height doubles, triples, or quadruples the slider setting. Scroll over a location to zoom there, or pinch to zoom on a touch screen. Hover or tap a cell to see its population and density. Hover over a city location to reveal additional city names.</p>
       <p>Colors use the same population scale at every granularity. The gradient runs from green at zero to orange at 3,000, then reaches red at 30,000 people per hexagon. Red continues for higher counts. The legend spaces the population stops evenly for readability. Use <strong>Customize colors</strong> to set three colors and their population stops.</p>
       <p>The grid uses the November 2023 Kontur release. Original hexagons are assigned to New York by their centers. Coarser views sum their population into larger H3 cells. Density divides that sum by the full area of the larger hexagon, including any water. Large cells along the border can extend beyond New York.</p>
       <p>Use <strong>Geographic features</strong> to show waterways and regional boundaries. They can be hidden behind towers at least one-quarter as tall as the tallest tower at the current granularity. Use <strong>Adirondack road loops</strong> to trace the large loop and the two smaller loops around the High Peaks. The base map is colored by elevation. Use <strong>Elevation relief</strong> to raise the terrain beneath the population towers with 14× vertical exaggeration. A fixed point light changes the direction and length of shadows as you tilt, turn, or pan the map. Elevation and population can show spatial patterns together, such as sparse settlement in the higher Adirondacks.</p>
