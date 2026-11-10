@@ -1,9 +1,11 @@
 import { createLayers } from './layers.js?v=terrain-base';
-import { populationColor, populationStops } from './population-colors.js?v=green-base';
+import { populationColor, populationStops } from './population-colors.js?v=city-hover';
 import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
+import { heightMultiplier } from './tower-heights.js';
+import { mountHoverCities } from './hover-cities.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
@@ -108,9 +110,12 @@ export function startCanvasMap({meta, layerData}) {
     controls.places.append(place.button);
   }
 
+  function reliefScale() {
+    return Math.min(stage.clientWidth/750,stage.clientHeight/425);
+  }
+
   function measure() {
-    return Math.min(stage.clientWidth / (flat ? overview.width : 750),
-                    stage.clientHeight / (flat ? overview.depth : 425));
+    return flat ? Math.min(stage.clientWidth/overview.width,stage.clientHeight/overview.depth) : reliefScale();
   }
 
   function project(x, z, elevation) {
@@ -121,6 +126,13 @@ export function startCanvasMap({meta, layerData}) {
       canvas.clientHeight / 2 + ((dx * sin + dz * cos) * tiltSin - elevation * tiltCos) * scale,
     ];
   }
+
+  function surfaceAt(x,z) {
+    return overlays.showElevation ? groundHeight(terrain,x,z) : 0;
+  }
+
+  const hoverCity = mountHoverCities(meta.hoverCities ?? [],controls.labels,
+    (x,z) => project(x,z,surfaceAt(x,z)));
 
   function outline(offset, fill) {
     context.beginPath();
@@ -224,7 +236,7 @@ export function startCanvasMap({meta, layerData}) {
     outline(0, '#254634');
     drawTerrain(width,tall);
 
-    const multiplier = Number(controls.height.value) / 100;
+    const multiplier = heightMultiplier(controls.height,tall,reliefScale()*Math.cos(.67));
     drawShadows(width, tall, multiplier);
     visible.length = 0;
     let lastColor;
@@ -285,7 +297,6 @@ export function startCanvasMap({meta, layerData}) {
     display.globalCompositeOperation = 'copy';
     display.drawImage(frameBuffer,0,0);
 
-    const surfaceAt = (x,z) => overlays.showElevation ? groundHeight(terrain,x,z) : 0;
     if (occlusion) overlays.render((x,z) => {
       const y = surfaceAt(x,z)+.08;
       const [px,py] = project(x,z,y);
@@ -303,6 +314,7 @@ export function startCanvasMap({meta, layerData}) {
 
   function queue() {
     controls.tip.hidden = true;
+    hoverCity.hide();
     if (!frame) frame = requestAnimationFrame(draw);
   }
 
@@ -352,12 +364,16 @@ export function startCanvasMap({meta, layerData}) {
   let drag;
   canvas.addEventListener('pointerdown', e => {
     if (drag) return;
+    hoverCity.hide();
     canvas.setPointerCapture(e.pointerId);
     drag = {id:e.pointerId, x:e.offsetX, y:e.offsetY, distance:0, pan:flat || e.button === 2 || e.shiftKey};
   });
   canvas.addEventListener('pointermove', e => {
     if (!drag) {
-      if (e.pointerType === 'mouse') pick(e.offsetX,e.offsetY);
+      if (e.pointerType === 'mouse') {
+        if (hoverCity.show(e.offsetX,e.offsetY)) controls.tip.hidden = true;
+        else pick(e.offsetX,e.offsetY);
+      }
       return;
     }
     if (drag.id !== e.pointerId) return;
@@ -379,7 +395,10 @@ export function startCanvasMap({meta, layerData}) {
     drag = null;
   });
   canvas.addEventListener('pointercancel', () => { drag = null; });
-  canvas.addEventListener('pointerleave', () => { if (!drag) controls.tip.hidden = true; });
+  canvas.addEventListener('pointerleave', () => {
+    hoverCity.hide();
+    if (!drag) controls.tip.hidden = true;
+  });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
   function changeZoom(factor) {
     zoom = Math.max(.7,Math.min(45,zoom*factor));

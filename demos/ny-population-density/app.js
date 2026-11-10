@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=complete-frames';
+import { startCanvasMap } from './fallback.js?v=city-hover';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
-import { colorChannels, mountPopulationLegend, maxColorPopulation, populationFraction, populationStops } from './population-colors.js?v=green-base';
+import { colorChannels, mountPopulationLegend, maxColorPopulation, populationStops } from './population-colors.js?v=city-hover';
 import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
 import { topDownFrame } from './map-frame.js';
+import { heightMultiplier, scaleTowerHeights } from './tower-heights.js';
+import { mountHoverCities } from './hover-cities.js';
 
 const stage = document.querySelector('#stage');
 const status = document.querySelector('#status');
@@ -143,10 +145,7 @@ function wireGranularity(levels, grids, renderGrid) {
     areaLabel.textContent = `~${area} sq. mi.`;
     control.setAttribute('aria-valuetext', `${index === 0 ? 'Original cells, ' : ''}about ${area} square miles per hexagon`);
     countLabel.textContent = number.format(cells.count);
-    for (let i=0;i<cells.count;i++) {
-      cells.elevation[i] = 112*populationFraction(cells.population[i],heightScale.value);
-    }
-    cells.peakHeight = 112*populationFraction(cells.largest,heightScale.value);
+    scaleTowerHeights(cells,index,heightScale.value);
     largestLabel.textContent = number.format(cells.largest);
     renderGrid(cells);
   }
@@ -184,7 +183,7 @@ function stateBase(polygons) {
 async function start() {
   const layerRequest = readLayers();
   const [meta, parentLevels] = await Promise.all(
-    ['data/map.json?v=green-base', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
+    ['data/map.json?v=city-hover', 'data/levels.json'].map(async path => (await checkedFetch(path)).json())
   );
   const levels = [{...meta, averageArea: 0.30}, ...parentLevels];
   const grids = await Promise.all(levels.map(level => readGrid({...level, step: meta.step})));
@@ -258,7 +257,7 @@ async function start() {
   }
 
   const matrix = new THREE.Matrix4();
-  let multiplier = Number(height.value)/100;
+  let multiplier = 0;
   let groundLevels;
   function updateHeights() {
     for (let i = 0; i < cells.count; i++) {
@@ -334,6 +333,8 @@ async function start() {
     return [(point.x+1)*stage.clientWidth/2,(1-point.y)*stage.clientHeight/2,-point.z];
   }
 
+  const hoverCity = mountHoverCities(meta.hoverCities ?? [],labels,project);
+
   function towerOcclusion() {
     const w = stage.clientWidth;
     const h = stage.clientHeight;
@@ -368,6 +369,7 @@ async function start() {
   }
 
   function queueDraw() {
+    hoverCity.hide();
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = null;
@@ -416,6 +418,12 @@ async function start() {
     queueDraw();
   }
 
+  function updateMultiplier() {
+    const horizontal = Math.hypot(52,550);
+    const verticalProjection = horizontal/Math.hypot(horizontal,476);
+    multiplier = heightMultiplier(height,stage.clientHeight,stage.clientWidth/worldWidth*verticalProjection);
+  }
+
   function resize() {
     const w = stage.clientWidth;
     const h = stage.clientHeight;
@@ -432,6 +440,8 @@ async function start() {
     if (flat && !selected) camera.zoom *= overviewZoom()/oldOverviewZoom;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
+    updateMultiplier();
+    if (groundLevels) updateHeights();
     queueDraw();
   }
   new ResizeObserver(resize).observe(stage);
@@ -444,14 +454,14 @@ async function start() {
   reset.onclick = () => {
     height.value = height.defaultValue;
     height.setAttribute('aria-valuetext',`${height.value}%`);
-    multiplier = Number(height.value)/100;
+    updateMultiplier();
     selected = null;
     flat = false;
     updateHeights();
     moveCamera();
   };
   height.addEventListener('input', () => {
-    multiplier = Number(height.value) / 100;
+    updateMultiplier();
     height.setAttribute('aria-valuetext', `${height.value}%`);
     updateHeights();
     tip.hidden = true;
@@ -492,10 +502,15 @@ async function start() {
   canvas.addEventListener('pointermove', event => {
     clearTimeout(hoverTimer);
     if (event.pointerType !== 'mouse' || event.buttons) return;
+    if (hoverCity.show(event.offsetX,event.offsetY)) {
+      tip.hidden = true;
+      return;
+    }
     hoverTimer = setTimeout(() => showCell(event.offsetX, event.offsetY), 60);
   });
-  canvas.addEventListener('pointerleave', () => { clearTimeout(hoverTimer); tip.hidden = true; });
+  canvas.addEventListener('pointerleave', () => { clearTimeout(hoverTimer); tip.hidden = true; hoverCity.hide(); });
   canvas.addEventListener('pointerdown', event => {
+    hoverCity.hide();
     clearTimeout(hoverTimer);
     tip.hidden = true;
     pointerStart = [event.offsetX, event.offsetY];

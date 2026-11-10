@@ -24,6 +24,16 @@ PLACES = [
     ("Watertown", -75.9108, 43.9748, 52),
     ("Plattsburgh", -73.4519, 44.7008, 52),
 ]
+HOVER_CITIES = [
+    ("Rome", -75.45573, 43.21285),
+    ("Utica", -75.2327, 43.1009),
+    ("Ithaca", -76.495, 42.4425),
+    ("Jamestown", -79.2421, 42.099),
+    ("Fredonia", -79.3314, 42.44),
+    ("Elmira", -76.8077, 42.0898),
+    ("Amsterdam", -74.1882, 42.9387),
+    ("Saratoga Springs", -73.7846, 43.0831),
+]
 
 
 def build_parent_grids(populations, transform, output):
@@ -105,12 +115,16 @@ def main(source, output):
     wgs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
     tx = osr.CoordinateTransformation(wgs, outline_layer.GetSpatialRef())
     build_parent_grids(populations, tx, output)
-    places = []
-    for name, lon, lat, distance in PLACES:
+    def map_place(name, lon, lat):
         x, y, _ = tx.TransformPoint(lon, lat)
-        places.append(dict(name=name, x=round((x-ORIGIN_X)/1000, 3),
-                           z=round((ORIGIN_Y-y)/1000, 3), distance=distance))
-    meta = dict(count=len(cells), step=STEP / 1000, chunks=chunks, outline=polygons, places=places)
+        return dict(name=name, x=round((x-ORIGIN_X)/1000, 3),
+                    z=round((ORIGIN_Y-y)/1000, 3))
+
+    places = [dict(map_place(name, lon, lat), distance=distance)
+              for name, lon, lat, distance in PLACES]
+    hover_cities = [map_place(name, lon, lat) for name, lon, lat in HOVER_CITIES]
+    meta = dict(count=len(cells), step=STEP / 1000, chunks=chunks, outline=polygons,
+                places=places, hoverCities=hover_cities)
     (output / "map.json").write_text(json.dumps(meta, separators=(",", ":")) + "\n")
 
 

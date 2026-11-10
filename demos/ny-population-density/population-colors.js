@@ -1,5 +1,3 @@
-const maxPopulation = 3036828;
-
 export const maxColorPopulation = 30000;
 
 const brackets = [
@@ -9,11 +7,6 @@ const brackets = [
 ];
 
 export const populationStops = brackets.map(([population,,color]) => [population/maxColorPopulation,color]);
-
-export function populationFraction(population,scale) {
-  const fraction = Math.max(0,Math.min(1,population/maxPopulation));
-  return scale === 'linear' ? fraction : Math.sqrt(fraction);
-}
 
 export function colorChannels(hex) {
   return [1,3,5].map(offset => parseInt(hex.slice(offset,offset+2),16));
