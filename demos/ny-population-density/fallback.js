@@ -453,7 +453,7 @@ export function startCanvasMap({meta, layerData, palette}) {
   canvas.addEventListener('contextmenu', e => e.preventDefault());
   function changeZoom(factor,x,y,nextX=x,nextY=y) {
     const previous = zoom;
-    zoom = Math.max(.12,Math.min(45,zoom*factor));
+    zoom = Math.max(.06,Math.min(45,zoom*factor));
     if (x !== undefined) {
       const centerX = stage.clientWidth/2;
       const centerY = stage.clientHeight/2;

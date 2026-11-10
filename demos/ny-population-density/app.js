@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js?v=anchored-zoom';
-import { startCanvasMap } from './fallback.js?v=height-factor';
+import { startCanvasMap } from './fallback.js?v=high-tower-fit';
 import { createLayers, readLayers } from './layers.js?v=adk-roads';
 import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
@@ -237,7 +237,7 @@ async function start() {
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 9500);
   const controls = new OrbitControls(camera, canvas);
-  controls.minZoom = 0.12;
+  controls.minZoom = 0.06;
   controls.maxZoom = 45;
   controls.zoomToCursor = true;
   controls.maxPolarAngle = Math.PI / 2;
