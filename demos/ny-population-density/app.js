@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { startCanvasMap } from './fallback.js?v=city-hover';
+import { startCanvasMap } from './fallback.js?v=palette-editor';
 import { createLayers, readLayers } from './layers.js?v=terrain-base';
-import { colorChannels, mountPopulationLegend, maxColorPopulation, populationStops } from './population-colors.js?v=city-hover';
+import { colorChannels, mountPopulationPalette } from './population-colors.js?v=palette-editor';
 import { studio } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
@@ -22,7 +22,8 @@ const viewFlat = document.querySelector('#view-flat');
 const reset = document.querySelector('#reset');
 const number = new Intl.NumberFormat('en-US');
 const heightScale = document.querySelector('#height-scale');
-mountPopulationLegend(document.querySelector('#population-bands'));
+const palette = mountPopulationPalette(document.querySelector('#population-bands'),
+  document.querySelector('#palette-editor'));
 const fullScreen = document.querySelector('#fullscreen');
 const mapCard = stage.closest('.map-card');
 fullScreen.hidden = false;
@@ -57,24 +58,30 @@ document.addEventListener('keydown',event => {
 
 function towerMaterial() {
   const material = new THREE.MeshLambertMaterial({flatShading:true});
-  const stopCount = populationStops.length;
-  const positions = {value:Float32Array.from(populationStops,([at]) => at)};
-  const colors = {value:populationStops.map(([,color]) =>
-    new THREE.Vector3(...colorChannels(color).map(channel => channel/255))
-  )};
+  const stopCount = palette.stops.length;
+  const positions = {value:new Float32Array(stopCount)};
+  const colors = {value:Array.from({length:stopCount},() => new THREE.Vector3())};
+  function updateStops(stops) {
+    stops.forEach(([population,color],i) => {
+      positions.value[i] = population;
+      colors.value[i].set(...colorChannels(color).map(channel => channel/255));
+    });
+  }
+  updateStops(palette.stops);
+  palette.subscribe(updateStops);
   material.onBeforeCompile = shader => {
     shader.uniforms.rampColors = colors;
     shader.uniforms.rampPositions = positions;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float towerColorFraction;\nvarying float populationAtHeight;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerColorFraction * (position.y + 0.5);');
+      .replace('#include <common>', '#include <common>\nattribute float towerPopulation;\nvarying float populationAtHeight;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\npopulationAtHeight = towerPopulation * (position.y + 0.5);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         varying float populationAtHeight;
         uniform float rampPositions[${stopCount}];
         uniform vec3 rampColors[${stopCount}];
         vec3 populationGradient(float d) {
-          float position = clamp(d, 0.0, 1.0);
+          float position = clamp(d, rampPositions[0], rampPositions[${stopCount-1}]);
           vec3 c = rampColors[0];
           for (int i=1; i<${stopCount}; i++) {
             if (position <= rampPositions[i]) {
@@ -111,7 +118,6 @@ async function readGrid(meta) {
     count: meta.count,
     x: new Float32Array(meta.count), z: new Float32Array(meta.count),
     density: new Float32Array(meta.count), elevation: new Float32Array(meta.count),
-    colorFraction: new Float32Array(meta.count),
     radius: new Float32Array(meta.count), angle: new Float32Array(meta.count),
     population: new Uint32Array(meta.count),
   };
@@ -124,7 +130,6 @@ async function readGrid(meta) {
       cells.z[index] = data.getInt16(offset + 2, true) * meta.step;
       cells.density[index] = data.getFloat32(offset + 4, true);
       cells.population[index] = recordBytes === 12 ? data.getUint16(offset + 8, true) : data.getUint32(offset + 8, true);
-      cells.colorFraction[index] = cells.population[index]/maxColorPopulation;
       largest = Math.max(largest,cells.population[index]);
       cells.radius[index] = data.getUint8(offset + recordBytes - 2) * radiusStep;
       cells.angle[index] = data.getUint8(offset + recordBytes - 1) * Math.PI / (3 * 255);
@@ -194,7 +199,7 @@ async function start() {
   try {
     renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   } catch {
-    wireGranularity(levels, grids, startCanvasMap({meta, layerData}));
+    wireGranularity(levels, grids, startCanvasMap({meta, layerData, palette}));
     return;
   }
   renderer.shadowMap.enabled = true;
@@ -234,8 +239,8 @@ async function start() {
 
   const prism = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   prism.rotateY(-Math.PI / 2);
-  const towerColorFractions = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
-  prism.setAttribute('towerColorFraction', towerColorFractions);
+  const towerPopulations = new THREE.InstancedBufferAttribute(new Float32Array(meta.count), 1);
+  prism.setAttribute('towerPopulation', towerPopulations);
   const towers = new THREE.InstancedMesh(prism, towerMaterial(), meta.count);
   towers.frustumCulled = false;
   towers.castShadow = true;
@@ -448,6 +453,7 @@ async function start() {
   resize();
   moveCamera();
   controls.addEventListener('change', () => { tip.hidden = true; queueDraw(); });
+  palette.subscribe(queueDraw);
 
   view3D.onclick = () => { flat = false; moveCamera(); };
   viewFlat.onclick = () => { flat = true; selected = null; moveCamera(); };
@@ -526,8 +532,8 @@ async function start() {
   function updateCells(grid) {
     cells = grid;
     towers.count = picker.count = cells.count;
-    towerColorFractions.array.set(cells.colorFraction);
-    towerColorFractions.needsUpdate = true;
+    towerPopulations.array.set(cells.population);
+    towerPopulations.needsUpdate = true;
     groundLevels = cells.x.map((x,i) => groundHeight(overlays.terrain,x,cells.z[i]));
     for (const place of meta.places) {
       place.peak = 0;

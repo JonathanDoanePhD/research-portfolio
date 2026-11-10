@@ -74,6 +74,7 @@ button:not([aria-pressed=true]):hover{background:#e9f3f8}
 #geographic-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
 #geographic-overlay.is-visible{display:block}
 .geo-line{fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.geo-line.geo-park,.geo-line.geo-region{filter:drop-shadow(0 0 1px #fff)}
 .geo-line.geo-park{stroke:#325d3f;stroke-dasharray:5 3}
 .geo-line.geo-region{stroke:#73503e;stroke-dasharray:3 4}
 .geo-line.geo-river,.geo-line.geo-canal{stroke:#174a77;filter:drop-shadow(0 0 1px #fff)}
@@ -125,3 +126,15 @@ body.map-expanded{overflow:hidden}
   .footer{padding:5px 0 7px}
   #stage{height:auto}
 }
+
+
+.layer-controls{position:relative;z-index:5}
+.palette-editor summary{cursor:pointer}
+.palette-panel{position:absolute;top:100%;right:8px;width:min(255px,calc(100vw - 42px));padding:10px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 5px 18px #112a3e25}
+.palette-stop{display:grid;grid-template-columns:50px 1fr 32px;align-items:center;gap:6px;margin-bottom:5px}
+.palette-stop input[type=number]{width:100%;min-width:0;font:inherit;padding:2px 4px}
+.palette-stop input[type=color]{width:30px;height:25px;padding:1px}
+.palette-error{margin:4px 0;color:#a42038}
+.palette-error:empty{display:none}
+.palette-actions{display:flex;gap:6px;margin-top:7px}
+.palette-actions button{border:1px solid var(--line);border-radius:5px;background:#f6f9fa;color:inherit;padding:2px 6px}

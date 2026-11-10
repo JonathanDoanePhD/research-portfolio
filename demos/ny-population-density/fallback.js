@@ -1,5 +1,5 @@
 import { createLayers } from './layers.js?v=terrain-base';
-import { populationColor, populationStops } from './population-colors.js?v=city-hover';
+import { makePopulationColor } from './population-colors.js?v=palette-editor';
 import { flatLightPosition, groundShadow } from './studio-light.js?v=green-base';
 import { makeTowerOcclusion, minimumOcclusionHeight } from './geography-depth.js?v=fixed-population';
 import { groundHeight } from './terrain.js';
@@ -9,7 +9,7 @@ import { mountHoverCities } from './hover-cities.js';
 
 const fmt = new Intl.NumberFormat('en-US');
 
-export function startCanvasMap({meta, layerData}) {
+export function startCanvasMap({meta, layerData, palette}) {
   const stage = document.querySelector('#stage');
   const canvas = document.createElement('canvas');
   const display = canvas.getContext('2d');
@@ -35,12 +35,20 @@ export function startCanvasMap({meta, layerData}) {
   towerRamp.width = 1;
   towerRamp.height = 4096;
   const rampContext = towerRamp.getContext('2d');
-  const ramp = rampContext.createLinearGradient(0,towerRamp.height,0,0);
-  for (const [at,color] of populationStops) ramp.addColorStop(at,color);
-  rampContext.fillStyle = ramp;
-  rampContext.fillRect(0,0,1,towerRamp.height);
   let cells;
   let tops;
+  let populationColor;
+  let lastStop;
+
+  function updateRamp(stops) {
+    populationColor = makePopulationColor(stops);
+    lastStop = stops.at(-1)[0];
+    const ramp = rampContext.createLinearGradient(0,towerRamp.height,0,0);
+    for (const [population,color] of stops) ramp.addColorStop(population/lastStop,color);
+    rampContext.fillStyle = ramp;
+    rampContext.fillRect(0,0,1,towerRamp.height);
+  }
+  updateRamp(palette.stops);
   let groundLevels;
   let order;
   const visible = [];
@@ -256,7 +264,7 @@ export function startCanvasMap({meta, layerData}) {
       context.globalAlpha = overlays.showElevation && cells.density[i] < 1000 ? .45 : 1;
       if (lastColor !== tops[i]) context.fillStyle = lastColor = tops[i];
       if (y - top > .8) {
-        const fraction = cells.colorFraction[i];
+        const fraction = cells.population[i]/lastStop;
         const rampFraction = Math.min(1,fraction);
         const sourceHeight = rampFraction * towerRamp.height;
         const rampTop = y - (y-top) * (rampFraction/fraction);
@@ -433,7 +441,7 @@ export function startCanvasMap({meta, layerData}) {
   new ResizeObserver(queue).observe(stage);
   function updateCells(grid) {
     cells = grid;
-    tops = Array.from(cells.colorFraction,populationColor);
+    tops = Array.from(cells.population,populationColor);
     groundLevels = cells.x.map((x,i) => groundHeight(terrain,x,cells.z[i]));
     order = Array.from({length: cells.count}, (_, i) => i);
     lastAngle = undefined;
@@ -451,6 +459,13 @@ export function startCanvasMap({meta, layerData}) {
     visible.length = 0;
     queue();
   }
+  palette.subscribe(stops => {
+    updateRamp(stops);
+    if (cells) {
+      tops = Array.from(cells.population,populationColor);
+      queue();
+    }
+  });
   document.querySelector('#status').hidden = true;
   stage.dataset.ready = 'canvas';
   return updateCells;
