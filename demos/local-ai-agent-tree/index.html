@@ -9,6 +9,7 @@
 <style>
 :root{color-scheme:dark;--bg:#111b19;--panel:#172623;--ink:#eef4e8;--muted:#aabdb4;--line:#355049;--mint:#a9e9b8;--blue:#a9bfef;font:15px/1.5 system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:1550px;margin:auto;padding-inline:clamp(16px,4vw,56px)}header{padding-block:25px 24px}nav{display:flex;justify-content:space-between;gap:12px;font-size:.85rem}h1,h2,h3,p{margin:0}h1{font:500 clamp(2.6rem,6vw,5.6rem)/1 Georgia,serif;letter-spacing:-.065em;margin:29px 0 12px}header p{color:var(--muted);font-size:1.05rem;max-width:55ch}.explorer{border:1px solid var(--line);border-radius:17px;overflow:hidden;background:var(--panel)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line)}button,label{font:inherit}button{color:inherit;cursor:pointer;background:#20332e;border:1px solid #425e55;border-radius:8px;padding:6px 11px}button:hover,button[aria-pressed=true]{background:#334e44}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:3px}button:disabled{opacity:.45;cursor:default}select{background:#20332e;color:inherit;border:1px solid #425e55;border-radius:8px;padding:7px}label{color:var(--muted);display:flex;align-items:center;gap:7px}.spacer{flex:1}.legend{display:flex;flex-wrap:wrap;gap:13px;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--mint)}.dot.blue{background:var(--blue)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px)}.viewport{height:clamp(500px,66vh,730px);position:relative;overflow:hidden;background:#12201c radial-gradient(#38534a 1px,transparent 1px) 0 0/20px 20px;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}svg#graph{display:block;width:100%;height:100%}.edge{fill:none;stroke:var(--accent);stroke-opacity:.31;stroke-width:1.6}.edge.active{stroke-opacity:1;stroke-width:2}.node{cursor:pointer;outline:none}.node rect{fill:#1d3029;stroke:#507061;stroke-width:1}.node.b rect{fill:#22303e;stroke:#5c7189}.node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}.node.selected rect{fill:#35483d}.node.b.selected rect{fill:#354357}.a{--accent:var(--mint)}.b{--accent:var(--blue)}.node text{pointer-events:none;fill:var(--ink);font-size:14px;font-weight:600}.node .code{fill:var(--accent);font:10px ui-monospace,monospace;letter-spacing:.05em}.node circle{fill:var(--accent)}.dim{opacity:.38}.tooltip{position:absolute;max-width:250px;z-index:2;pointer-events:none;background:#0f1c18;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:.82rem;box-shadow:0 9px 24px #0005}.detail{padding:22px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:13px;min-width:0}.detail h2{font:500 2rem/1 Georgia,serif;letter-spacing:-.035em}.detail p{color:var(--muted)}.meta{color:var(--accent);font: .73rem ui-monospace,monospace;letter-spacing:.05em}.links{display:grid;gap:7px;margin-top:3px}.links button{text-align:left}.footbar{padding:9px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;display:flex;justify-content:space-between;gap:10px}.build{margin:28px 0}.build h2{font:500 2rem Georgia,serif}.build ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:0;list-style:none;gap:9px}.build button{width:100%;height:100%;text-align:left;padding:11px}.build small{display:block;color:var(--mint)}footer{color:var(--muted);padding-bottom:24px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:760px){.layout{grid-template-columns:1fr}.viewport{height:440px}.detail{border-left:0;border-top:1px solid var(--line)}.spacer{display:none}.legend{width:100%}.footbar{flex-wrap:wrap}}
+.detail{min-height:0}.detail-copy{overflow:auto}.links{margin-top:auto;grid-template-rows:repeat(3,auto)}.links button{min-height:38px}.links .empty{visibility:hidden}.links .expands{border-style:dashed;color:var(--muted);background:transparent}.links .expands:hover{color:var(--ink);background:#20332e}.links small{display:block;color:var(--muted)}.links .expands{position:relative}.links .expands::after{content:" ↗"}.detail h2{margin-bottom:8px}dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:13px;padding:22px;max-width:min(380px,90vw)}dialog::backdrop{background:#07110ec2}dialog p{color:var(--muted);margin:10px 0 18px}dialog form{display:flex;justify-content:flex-end;gap:8px}@media(max-width:760px){.detail{min-height:340px}}
 </style>
 </head>
 <body>
@@ -21,16 +22,20 @@
 <section class="explorer" aria-label="Interactive architecture explorer">
 <div class="toolbar">
 <label>Depth <select id="depth"><option value="0">0 · Overview</option><option value="1">1 · Two branches</option><option value="2">2 · Four components</option><option value="3" selected>3 · Eight subsystems</option><option value="4">4 · Sixteen build steps</option></select></label>
-<button id="out" aria-label="Zoom out">−</button><button id="in" aria-label="Zoom in">+</button><button id="fit">Fit view</button><button id="focus" aria-pressed="false">Focus branch</button>
+<button id="orientation" aria-label="Tree orientation">Top-down</button><button id="out" aria-label="Zoom out">−</button><button id="in" aria-label="Zoom in">+</button><button id="fit">Fit view</button><button id="focus" aria-pressed="false">Focus branch</button>
 <div class="spacer"></div><div class="legend"><span><i class="dot"></i>Process a row</span><span><i class="dot blue"></i>Manage a dataset</span></div>
 </div>
 <div class="layout">
 <div class="viewport" id="viewport"><svg id="graph" aria-label="Binary architecture tree"><g id="scene"></g></svg><div class="tooltip" id="tip" role="tooltip" hidden></div></div>
-<aside class="detail a" id="detail"><div class="meta" id="meta"></div><div aria-live="polite"><h2 id="title"></h2><p id="explanation"></p></div><div class="links" id="links"></div></aside>
+<aside class="detail a" id="detail"><div class="meta" id="meta"></div><div class="detail-copy" aria-live="polite"><h2 id="title"></h2><p id="explanation"></p></div><div class="links" id="links"></div></aside>
 </div>
 <div class="footbar"><span>Drag to pan · Scroll to zoom · Select a node to read it</span><span id="status"></span></div>
 </section>
 <section class="build" aria-labelledby="build-title"><h2 id="build-title">Build it in this order</h2><ol id="build"></ol></section>
+<dialog id="expand" aria-labelledby="expand-title">
+<h2 id="expand-title">Expand to next level?</h2><p>The tree will show another level and fit the expanded view.</p>
+<form method="dialog"><button value="cancel" autofocus>Stay here</button><button value="expand">Expand tree</button></form>
+</dialog>
 <noscript>Enable JavaScript to explore the architecture tree.</noscript>
 </main>
 <footer>Python · Ollama · SQLite · FastAPI</footer>
@@ -81,7 +86,8 @@ for (const node of nodes.values()) node.depth = node.parent ? nodes.get(node.par
 const graph = $("graph"), scene = $("scene"), view = $("viewport"), depth = $("depth");
 const W = 181, H = 59, DX = 224, DY = 74;
 let selected = nodes.get(location.hash.slice(1)) || nodes.get("root");
-let focused = false, positions = new Map(), width, height, x = 0, y = 0, scale = 1, baseScale = 1;
+let focusRoot = null, topDown = localStorage.getItem("agent-tree-layout") !== "horizontal";
+let positions = new Map(), width, height, x = 0, y = 0, scale = 1, baseScale = 1;
 let pointers = new Map(), moved = false;
 const color = node => node.id.startsWith("B") ? "b" : "a";
 const closestNode = event => event.target.closest(".node");
@@ -110,7 +116,9 @@ function button(text, action) {
   return item;
 }
 function show(node, center=false) {
-  const reset = node.depth > Number(depth.value) || (focused && node !== selected);
+  const outsideBranch = focusRoot && !positions.has(node.id) && node.depth <= Number(depth.value);
+  if (outsideBranch) focusRoot = null;
+  const reset = node.depth > Number(depth.value) || outsideBranch;
   if (node.depth > Number(depth.value)) depth.value = node.depth;
   selected = node;
   if (location.hash !== "#" + node.id) history.replaceState(null,"","#"+node.id);
@@ -126,7 +134,7 @@ function render(reset) {
   $("tip").hidden = true;
   scene.replaceChildren();
   positions = new Map();
-  const root = focused ? selected : nodes.get("root");
+  const root = focusRoot || nodes.get("root");
   let row = 0, columns = 1;
   function layout(node, level) {
     columns = Math.max(columns,level+1);
@@ -139,6 +147,15 @@ function render(reset) {
   layout(root,0);
   width = (columns-1)*DX+W;
   height = (row-1)*DY+H;
+  if (topDown) {
+    width = (row-1)*(W+20)+W;
+    height = (columns-1)*(H+43)+H;
+    for (const p of positions.values()) {
+      const level = p.x/DX;
+      p.x = (p.y-H/2)/DY*(W+20);
+      p.y = level*(H+43)+H/2;
+    }
+  }
   const trail = new Set();
   for (let node = selected; node; node = nodes.get(node.parent)) trail.add(node.id);
   for (const {node,x:xx,y:yy} of positions.values()) {
@@ -146,10 +163,14 @@ function render(reset) {
     if (!parent) continue;
     const start = parent.x+W;
     const middle = (start+xx)/2;
+    const midY = (parent.y + yy)/2;
+    const path = topDown
+      ? `M ${parent.x+W/2} ${parent.y+H/2} C ${parent.x+W/2} ${midY}, ${xx+W/2} ${midY}, ${xx+W/2} ${yy-H/2}`
+      : `M ${start} ${parent.y} C ${middle} ${parent.y}, ${middle} ${yy}, ${xx} ${yy}`;
     scene.append(svg("path",{class:`edge ${color(node)} ${trail.has(node.id)?"active":""}`,
-      d:`M ${start} ${parent.y} C ${middle} ${parent.y}, ${middle} ${yy}, ${xx} ${yy}`}));
+      d:path}));
   }
-  const visible = [...positions.values()].sort((a,b)=>a.x-b.x||a.y-b.y);
+  const visible = [...positions.values()].sort((a,b)=>a.node.depth-b.node.depth || (topDown ? a.x-b.x : a.y-b.y));
   for (const {node,x:xx,y:yy} of visible) {
     const group = svg("g",{class:`node ${color(node)} ${node===selected?"selected":""}`,
       role:"button",tabindex:"0","aria-label":node.title,"aria-pressed":String(node===selected),
@@ -188,28 +209,70 @@ function render(reset) {
   $("meta").textContent = `LEVEL ${selected.depth} · ${selected.id==="root"?"OVERVIEW":selected.id}`;
   $("title").textContent = selected.title;
   $("explanation").textContent = selected.text;
-  $("focus").disabled = !focused && (selected.id==="root" || !selected.children.length);
-  $("focus").setAttribute("aria-pressed",String(focused));
+  $("focus").disabled = !focusRoot && (selected.id==="root" || !selected.children.length);
+  $("focus").setAttribute("aria-pressed",String(Boolean(focusRoot)));
+  $("focus").textContent = focusRoot ? "Show full tree" : "Focus branch";
   const links = $("links");
+  const focusedSlot = links.contains(document.activeElement) ? document.activeElement.dataset.slot : null;
   links.replaceChildren();
-  if (selected.parent) {
-    const parent = nodes.get(selected.parent);
-    links.append(button("↑ "+parent.title,()=>show(parent,true)));
+  const targets = [nodes.get(selected.parent), ...selected.children];
+  for (let slot=0; slot<3; slot++) {
+    const node = targets[slot];
+    const expands = node && node.depth > Number(depth.value);
+    const label = node ? (slot===0 ? "↑ "+node.title : node.title+(expands ? "" : " →")) : "Empty";
+    const control = button(label,()=>navigate(node,control));
+    control.dataset.slot = slot;
+    if (!node) {control.className = "empty"; control.disabled = true;}
+    if (expands) {
+      control.className = "expands";
+      control.setAttribute("aria-label",node.title+" (expands tree)");
+      control.title = "Expands the tree to the next level";
+    }
+    links.append(control);
   }
-  for (const child of selected.children) links.append(button(child.title+" →",()=>show(child,true)));
+  if (focusedSlot !== null) {
+    (links.querySelector(`[data-slot="${focusedSlot}"]:not(:disabled)`) ||
+      links.querySelector("button:not(:disabled)"))?.focus({preventScroll:true});
+  }
   if (reset) fit(); else paint();
 }
 depth.addEventListener("change",()=>{
   while (selected.depth>Number(depth.value)) selected=nodes.get(selected.parent);
-  if (!selected.parent) focused=false;
+  if (focusRoot && focusRoot.depth>Number(depth.value)) focusRoot=null;
   show(selected);
   fit();
 });
 $("focus").addEventListener("click",()=>{
-  focused=!focused;
-  if (focused && Number(depth.value)===selected.depth) depth.value=selected.depth+1;
+  focusRoot = focusRoot ? null : selected;
+  if (focusRoot && Number(depth.value)===selected.depth) depth.value=selected.depth+1;
   render(true);
 });
+const dialog = $("expand");
+let pending = null;
+function navigate(node, control) {
+  if (node.depth <= Number(depth.value)) {show(node); return;}
+  pending = {node, control};
+  dialog.returnValue = "";
+  dialog.showModal();
+}
+dialog.addEventListener("close",()=>{
+  if (!pending) return;
+  const {node, control} = pending;
+  pending = null;
+  if (dialog.returnValue === "expand") show(node);
+  else control.focus({preventScroll:true});
+});
+function syncOrientation() {
+  $("orientation").textContent = topDown ? "↓ Top-down" : "→ Left-right";
+  $("orientation").setAttribute("aria-label",topDown ? "Switch to left-right layout" : "Switch to top-down layout");
+}
+$("orientation").addEventListener("click",()=>{
+  topDown = !topDown;
+  localStorage.setItem("agent-tree-layout",topDown ? "vertical" : "horizontal");
+  syncOrientation();
+  render(true);
+});
+syncOrientation();
 $("in").addEventListener("click",()=>zoom(1.25));
 $("out").addEventListener("click",()=>zoom(.8));
 $("fit").addEventListener("click",fit);
