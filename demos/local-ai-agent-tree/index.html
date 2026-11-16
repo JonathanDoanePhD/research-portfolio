@@ -27,6 +27,7 @@ button,select{background:#f6f9fa;border-color:#b2c9d7}button:hover,button[aria-p
 .node[data-depth="3"]{--tint:15%}.node[data-depth="4"]{--tint:20%}
 .node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}
 .flight-copy{font:13px/1.34 Arial,sans-serif;color:var(--ink);margin:0;overflow-wrap:anywhere}.flight .node text:not(.code){font-size:16px}.flight .node foreignObject{pointer-events:none}
+.links button{display:flex;align-items:center;gap:7px}.links button svg{flex:none}.links button svg:last-child{margin-left:auto}
 </style>
 </head>
 <body>
@@ -292,8 +293,14 @@ function render(reset) {
     const fromFirst = targets[0]?.children[0]===selected;
     const back = orientation === "horizontal" ? (fromFirst ? "↙" : "↖") : (fromFirst ? "↗" : "↖");
     const forward = orientation === "horizontal" ? (slot===1 ? "↗" : "↘") : (slot===1 ? "↙" : "↘");
-    const label = node ? (slot===0 ? back+" "+node.title : node.title+" "+forward) : "Empty";
-    const control = button(label,()=>show(node));
+    const control = button(node?.title || "Empty",()=>show(node));
+    if (node) {
+      const angle = {"↗":-45,"↘":45,"↙":135,"↖":225}[slot===0 ? back : forward];
+      const arrow=svg("svg",{width:16,height:16,viewBox:"0 0 16 16","aria-hidden":"true"});
+      arrow.append(svg("path",{d:"M 2.5 8 H 13 M 9 4 L 13 8 L 9 12",fill:"none",
+        stroke:"currentColor","stroke-width":"1.5",transform:`rotate(${angle} 8 8)`}));
+      if (slot===0) control.prepend(arrow); else control.append(arrow);
+    }
     control.dataset.slot = slot;
     if (!node) {control.className = "empty"; control.disabled = true;}
     if (expands) {
