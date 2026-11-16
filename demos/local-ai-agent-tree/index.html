@@ -97,7 +97,7 @@ function assignLanes(node, start=0, span=1) {
 }
 assignLanes(nodes.get("root"));
 let positions = new Map(), width, height, x = 0, y = 0, scale = 1, baseScale = 1;
-let pointers = new Map(), moved = false;
+let pointers = new Map(), moved = false, pinchDistance = 0;
 const color = node => node.id.startsWith("B") ? "b" : "a";
 const closestNode = event => event.target.closest(".node");
 function paint() {
@@ -364,7 +364,7 @@ function syncOrientation() {
   depth.disabled=flight;
   $("focus").hidden=flight;
   $("fit").textContent=flight ? "Back to root" : "Fit view";
-  $("help").textContent=flight ? "Aim at a branch and scroll up to fly in · Scroll down to back out · Click to jump"
+  $("help").textContent=flight ? "Scroll or pinch out toward a branch to fly in · Reverse to go back · Tap a node to jump"
     : "Drag to pan · Scroll to zoom · Select a node to read it";
   view.classList.toggle("flight",flight);
   for (const [id,label] of [["in",flight?"Fly into a branch":"Zoom in"],["out",flight?"Fly back":"Zoom out"]]) {
@@ -400,9 +400,14 @@ graph.addEventListener("wheel",event=>{
   zoom(Math.exp(-Math.sign(event.deltaY)*.13),event.clientX-bounds.left,event.clientY-bounds.top);
 },{passive:false});
 graph.addEventListener("pointerdown",event=>{
-  if (isFlight() || event.button!==0) return;
+  if (event.button!==0 || (isFlight() && event.pointerType!=="touch")) return;
   if (!pointers.size) moved=false;
   pointers.set(event.pointerId,[event.clientX,event.clientY]);
+  if (isFlight() && pointers.size===2) {
+    const [a,b]=pointers.values();
+    pinchDistance=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    moved=true;
+  }
   if (!closestNode(event)) graph.setPointerCapture(event.pointerId);
   $("tip").hidden=true;
 });
@@ -410,6 +415,20 @@ graph.addEventListener("pointermove",event=>{
   const old=pointers.get(event.pointerId);
   if (!old) return;
   const current=[event.clientX,event.clientY];
+  if (isFlight()) {
+    pointers.set(event.pointerId,current);
+    if (pointers.size!==2) return;
+    const [a,b]=pointers.values();
+    const distance=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    if (!pinchDistance || flightFrom) return;
+    const ratio=distance/pinchDistance;
+    if (ratio>1.22 || ratio<.82) {
+      pinchDistance=0;
+      const midpoint=(a[0]+b[0])/2-graph.getBoundingClientRect().left;
+      fly(ratio>1,midpoint);
+    }
+    return;
+  }
   const dx=current[0]-old[0],dy=current[1]-old[1];
   if (!moved && Math.hypot(dx,dy)<4) return;
   moved=true;
@@ -428,6 +447,7 @@ graph.addEventListener("pointermove",event=>{
 });
 for (const name of ["pointerup","pointercancel","lostpointercapture"]) graph.addEventListener(name,event=>{
   pointers.delete(event.pointerId);
+  if(pointers.size<2) pinchDistance=0;
   if(!pointers.size) view.classList.remove("dragging");
 });
 window.addEventListener("pointerup",event=>pointers.delete(event.pointerId));
