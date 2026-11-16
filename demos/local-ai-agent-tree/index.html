@@ -26,6 +26,7 @@ button,select{background:#f6f9fa;border-color:#b2c9d7}button:hover,button[aria-p
 .node[data-depth="1"]{--tint:5%}.node[data-depth="2"]{--tint:10%}
 .node[data-depth="3"]{--tint:15%}.node[data-depth="4"]{--tint:20%}
 .node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}
+.flight-copy{font:13px/1.34 Arial,sans-serif;color:var(--ink);margin:0;overflow-wrap:anywhere}.flight .node text:not(.code){font-size:16px}.flight .node foreignObject{pointer-events:none}
 </style>
 </head>
 <body>
@@ -95,7 +96,10 @@ const nodes = new Map(tree.map(([id,parent,title,text]) => [id,{id,parent,title,
 for (const node of nodes.values()) if (node.parent) nodes.get(node.parent).children.push(node);
 for (const node of nodes.values()) node.depth = node.parent ? nodes.get(node.parent).depth + 1 : 0;
 const graph = $("graph"), scene = $("scene"), view = $("viewport"), depth = $("depth");
-const W = 181, H = 59, DX = 224, DY = 74;
+const W = 181, H = 59, DX = 224, DY = 74, FLIGHT_WIDTH = 248;
+const sentenceSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en",{granularity:"sentence"}) : null;
+const firstSentence = text => sentenceSegmenter?.segment(text).containing(0)?.segment.trim()
+  || text.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() || text;
 let selected = nodes.get(location.hash.slice(1)) || nodes.get("root");
 const orientations = ["vertical","horizontal","flight"];
 const savedOrientation = localStorage.getItem("agent-tree-branded-layout");
@@ -224,12 +228,24 @@ function render(reset) {
     const group = svg("g",{class:`node ${color(node)} ${node===selected?"selected":""}`,
       role:"button",tabindex:"0","aria-label":node.title,"aria-pressed":String(node===selected),
       "data-node":node.id,"data-depth":node.depth,transform:`translate(${xx} ${yy-H/2})`});
-    group.append(svg("rect",{width:W,height:H}));
+    const cardWidth = flight ? FLIGHT_WIDTH : W;
+    group.append(svg("rect",{width:cardWidth,height:H}));
     const code = svg("text",{x:12,y:20,class:"code"});
     code.textContent = node.id==="root" ? "OVERVIEW" : node.id;
     const label = svg("text",{x:12,y:43});
     label.textContent = node.title;
     group.append(code,label);
+    if (flight) {
+      for (const [type,copy] of [["full",node.text],["preview",firstSentence(node.text)]]) {
+        const area=svg("foreignObject",{x:12,y:53,width:cardWidth-24,height:190,"data-copy":type,
+          "aria-hidden":"true"});
+        const paragraph=document.createElement("p");
+        paragraph.className="flight-copy";
+        paragraph.textContent=copy;
+        area.append(paragraph);
+        group.append(area);
+      }
+    }
     group.addEventListener("click",()=>{if(!moved)show(node);});
     group.addEventListener("keydown",event=>{
       if (["Enter"," "].includes(event.key)) {
@@ -239,7 +255,7 @@ function render(reset) {
       }
     });
     group.addEventListener("pointerenter",()=> {
-      if (pointers.size) return;
+      if (flight || pointers.size) return;
       const bounds = group.getBoundingClientRect(), local = view.getBoundingClientRect();
       const tip = $("tip");
       tip.textContent = node.text.split(/\. /)[0] + (node.text.includes(". ") ? "." : "");
@@ -249,8 +265,13 @@ function render(reset) {
     });
     group.addEventListener("pointerleave",()=>{$("tip").hidden=true;});
     scene.append(group);
-    if (label.getComputedTextLength() > W-20) {
-      label.setAttribute("textLength", W-20);
+    if (flight) {
+      for(const area of group.querySelectorAll("[data-copy]")) {
+        area.dataset.height=area.firstElementChild.scrollHeight+65;
+      }
+    }
+    if (label.getComputedTextLength() > cardWidth-20) {
+      label.setAttribute("textLength", cardWidth-20);
       label.setAttribute("lengthAdjust", "spacingAndGlyphs");
     }
   }
@@ -268,8 +289,9 @@ function render(reset) {
   for (let slot=0; slot<3; slot++) {
     const node = targets[slot];
     const expands = !flight && node && node.depth > Number(depth.value);
-    const back = orientation === "horizontal" ? "←" : "↑";
-    const forward = orientation === "horizontal" ? "→" : "↓";
+    const fromFirst = targets[0]?.children[0]===selected;
+    const back = orientation === "horizontal" ? (fromFirst ? "↙" : "↖") : (fromFirst ? "↗" : "↖");
+    const forward = orientation === "horizontal" ? (slot===1 ? "↗" : "↘") : (slot===1 ? "↙" : "↘");
     const label = node ? (slot===0 ? back+" "+node.title : node.title+" "+forward) : "Empty";
     const control = button(label,()=>show(node));
     control.dataset.slot = slot;
@@ -310,12 +332,12 @@ function project(node, anchor) {
   const vw = graph.clientWidth, vh = graph.clientHeight;
   const spread = Math.min(vw*.94,910);
   const lane = (lanes.get(node.id)-lanes.get(anchor.id))*2**anchor.depth;
-  const size = Math.min(1.48,vw/305)*factor;
+  const size = Math.min(1.23,vw/355)*factor*(vertical>=2 ? .78 : 1);
   return {
     x:vw/2+lane*spread*factor*1.65,
-    y:vh*.22+z*vh*.46*factor,
+    y:vh*.22+z*vh*.65*factor,
     size,
-    alpha:flightVisible(node,anchor) ? [1,.82,.39][vertical] : 0
+    alpha:flightVisible(node,anchor) ? [1,.94,.43][vertical] : 0
   };
 }
 function paintFlight() {
@@ -327,8 +349,21 @@ function paintFlight() {
     const id=group.dataset.node, node=nodes.get(id);
     const from=project(node,old), to=project(node,selected);
     const p=Object.fromEntries(Object.keys(from).map(key=>[key,blend(from[key],to[key])]));
+    const full=group.querySelector('[data-copy="full"]'), preview=group.querySelector('[data-copy="preview"]');
+    const role=(anchor)=>!flightVisible(node,anchor) ? "" : node===anchor ? "full" :
+      node.parent===anchor.id ? "preview" : "";
+    const fromRole=role(old), toRole=role(selected);
+    const height=kind=>kind==="full" ? Number(full.dataset.height) :
+      kind==="preview" ? Number(preview.dataset.height) : H;
+    p.height=blend(height(fromRole),height(toRole));
     geometry.set(id,p);
-    group.setAttribute("transform",`translate(${p.x-W*p.size/2} ${p.y-H*p.size/2}) scale(${p.size})`);
+    group.querySelector("rect").setAttribute("height",p.height);
+    group.setAttribute("transform",`translate(${p.x-FLIGHT_WIDTH*p.size/2} ${p.y-p.height*p.size/2}) scale(${p.size})`);
+    for (const area of [full,preview]) {
+      const kind=area.dataset.copy;
+      area.setAttribute("height",Math.max(0,p.height-53));
+      area.style.opacity=blend(Number(fromRole===kind),Number(toRole===kind));
+    }
     group.style.opacity=p.alpha;
     group.style.pointerEvents=p.alpha>.16 ? "" : "none";
     group.setAttribute("tabindex",p.alpha>.16 ? "0" : "-1");
@@ -344,7 +379,7 @@ function paintFlight() {
       a={x:blend(from.x,to.x),y:blend(from.y,to.y),size:blend(from.size,to.size),alpha:0};
     }
     const b=geometry.get(node.id);
-    const start=a.y+H*a.size/2, end=b.y-H*b.size/2, mid=(start+end)/2;
+    const start=a.y+(a.height||H)*a.size/2, end=b.y-b.height*b.size/2, mid=(start+end)/2;
     line.setAttribute("d",`M ${a.x} ${start} C ${a.x} ${mid}, ${b.x} ${mid}, ${b.x} ${end}`);
     if (incoming) {
       const fade=$("parent-fade");
