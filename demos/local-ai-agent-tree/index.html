@@ -118,14 +118,25 @@ for (const node of nodes.values()) if (node.parent) nodes.get(node.parent).child
 for (const node of nodes.values()) {
   const parent=nodes.get(node.parent);
   node.depth=parent ? parent.depth+1 : 0;
-  node.outline=parent ? `${parent.outline}.${parent.children.indexOf(node)+1}` : "1";
+  node.outline=!parent ? "0" : node.depth===1 ? String(parent.children.indexOf(node)+1)
+    : `${parent.outline}.${parent.children.indexOf(node)+1}`;
 }
 const graph = $("graph"), scene = $("scene"), view = $("viewport"), depth = $("depth");
 const W = 181, H = 59, DX = 224, DY = 74, FLIGHT_WIDTH = 248;
 const sentenceSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en",{granularity:"sentence"}) : null;
 const firstSentence = text => sentenceSegmenter?.segment(text).containing(0)?.segment.trim()
   || text.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() || text;
-let selected = nodes.get(location.hash.slice(1)) || nodes.get("root");
+const outlines = new Map([...nodes.values()].map(node=>[node.outline,node]));
+function nodeFromHash() {
+  const fragment=location.hash.slice(1);
+  return outlines.get(fragment) || nodes.get(fragment) || nodes.get("root");
+}
+function writeNodeHash(node) {
+  const hash="#"+node.outline;
+  if (location.hash!==hash) history.replaceState(null,"",hash);
+}
+let selected = nodeFromHash();
+writeNodeHash(selected);
 const orientations = ["vertical","horizontal","flight"];
 const savedOrientation = localStorage.getItem("agent-tree-branded-layout");
 let orientation = orientations.includes(savedOrientation) ? savedOrientation : "flight";
@@ -172,7 +183,7 @@ function show(node, center=false) {
   if (isFlight()) {
     const previous = selected;
     selected = node;
-    history.replaceState(null,"","#"+node.id);
+    writeNodeHash(node);
     startFlight(previous);
     return;
   }
@@ -554,7 +565,7 @@ for (const name of ["pointerup","pointercancel","lostpointercapture"]) graph.add
   if(!pointers.size) view.classList.remove("dragging");
 });
 window.addEventListener("pointerup",event=>pointers.delete(event.pointerId));
-window.addEventListener("hashchange",()=>show(nodes.get(location.hash.slice(1))||nodes.get("root"),true));
+window.addEventListener("hashchange",()=>show(nodeFromHash(),true));
 const steps = [
  ["A2a.2","Score one passage","Validate a score and quote."],
  ["B1b.2","Add SQLite checkpoints","Resume a ten-row job."],
