@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="An interactive binary tree for building a local CSV research agent with Python, Ollama, and SQLite.">
 <title>Build a Local AI Agent | Interactive Architecture Tree</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23112a3e'/%3E%3Cpath d='M10 20h8m0-9v18m0-18h11m-11 18h11' stroke='%239bdeff' fill='none' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23112a3e'/%3E%3Cpath transform='rotate(90 20 20)' d='M10 20h8m0-9v18m0-18h11m-11 18h11' stroke='%239bdeff' fill='none' stroke-width='3'/%3E%3C/svg%3E">
 <style>
 :root{color-scheme:dark;--bg:#111b19;--panel:#172623;--ink:#eef4e8;--muted:#aabdb4;--line:#355049;--mint:#a9e9b8;--blue:#a9bfef;font:15px/1.5 system-ui,sans-serif}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:1550px;margin:auto;padding-inline:clamp(16px,4vw,56px)}header{padding-block:25px 24px}nav{display:flex;justify-content:space-between;gap:12px;font-size:.85rem}h1,h2,h3,p{margin:0}h1{font:500 clamp(2.6rem,6vw,5.6rem)/1 Georgia,serif;letter-spacing:-.065em;margin:29px 0 12px}header p{color:var(--muted);font-size:1.05rem;max-width:55ch}.explorer{border:1px solid var(--line);border-radius:17px;overflow:hidden;background:var(--panel)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line)}button,label{font:inherit}button{color:inherit;cursor:pointer;background:#20332e;border:1px solid #425e55;border-radius:8px;padding:6px 11px}button:hover,button[aria-pressed=true]{background:#334e44}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:3px}button:disabled{opacity:.45;cursor:default}select{background:#20332e;color:inherit;border:1px solid #425e55;border-radius:8px;padding:7px}label{color:var(--muted);display:flex;align-items:center;gap:7px}.spacer{flex:1}.legend{display:flex;flex-wrap:wrap;gap:13px;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--mint)}.dot.blue{background:var(--blue)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px)}.viewport{height:clamp(500px,66vh,730px);position:relative;overflow:hidden;background:#12201c radial-gradient(#38534a 1px,transparent 1px) 0 0/20px 20px;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}svg#graph{display:block;width:100%;height:100%}.edge{fill:none;stroke:var(--accent);stroke-opacity:.31;stroke-width:1.6}.edge.active{stroke-opacity:1;stroke-width:2}.node{cursor:pointer;outline:none}.node rect{fill:#1d3029;stroke:#507061;stroke-width:1}.node.b rect{fill:#22303e;stroke:#5c7189}.node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}.node.selected rect{fill:#35483d}.node.b.selected rect{fill:#354357}.a{--accent:var(--mint)}.b{--accent:var(--blue)}.node text{pointer-events:none;fill:var(--ink);font-size:14px;font-weight:600}.node .code{fill:var(--accent);font:10px ui-monospace,monospace;letter-spacing:.05em}.node circle{fill:var(--accent)}.dim{opacity:.38}.tooltip{position:absolute;max-width:250px;z-index:2;pointer-events:none;background:#0f1c18;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:.82rem;box-shadow:0 9px 24px #0005}.detail{padding:22px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:13px;min-width:0}.detail h2{font:500 2rem/1 Georgia,serif;letter-spacing:-.035em}.detail p{color:var(--muted)}.meta{color:var(--accent);font: .73rem ui-monospace,monospace;letter-spacing:.05em}.links{display:grid;gap:7px;margin-top:3px}.links button{text-align:left}.footbar{padding:9px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;display:flex;justify-content:space-between;gap:10px}.build{margin:28px 0}.build h2{font:500 2rem Georgia,serif}.build ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:0;list-style:none;gap:9px}.build button{width:100%;height:100%;text-align:left;padding:11px}.build small{display:block;color:var(--mint)}footer{color:var(--muted);padding-bottom:24px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:760px){.layout{grid-template-columns:1fr}.viewport{height:440px}.detail{border-left:0;border-top:1px solid var(--line)}.spacer{display:none}.legend{width:100%}.footbar{flex-wrap:wrap}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:1550px;margin:auto;padding-inline:clamp(16px,4vw,56px)}header{padding-block:25px 24px}nav{display:flex;justify-content:space-between;gap:12px;font-size:.85rem}h1,h2,h3,p{margin:0}h1{font:500 clamp(2.6rem,6vw,5.6rem)/1 Georgia,serif;letter-spacing:-.065em;margin:29px 0 12px}header p{color:var(--muted);font-size:1.05rem;max-width:55ch}.explorer{border:1px solid var(--line);overflow:hidden;background:var(--panel)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line)}button,label{font:inherit}button{color:inherit;cursor:pointer;background:#20332e;border:1px solid #425e55;padding:6px 11px}button:hover,button[aria-pressed=true]{background:#334e44}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:3px}button:disabled{opacity:.45;cursor:default}select{background:#20332e;color:inherit;border:1px solid #425e55;padding:7px}label{color:var(--muted);display:flex;align-items:center;gap:7px}.spacer{flex:1}.legend{display:flex;flex-wrap:wrap;gap:13px;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--mint)}.dot.blue{background:var(--blue)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px)}.viewport{height:clamp(500px,66vh,730px);position:relative;overflow:hidden;background:#12201c radial-gradient(#38534a 1px,transparent 1px) 0 0/20px 20px;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}svg#graph{display:block;width:100%;height:100%}.edge{fill:none;stroke:var(--accent);stroke-opacity:.31;stroke-width:1.6}.edge.active{stroke-opacity:1;stroke-width:2}.node{cursor:pointer;outline:none}.node rect{fill:#1d3029;stroke:#507061;stroke-width:1}.node.b rect{fill:#22303e;stroke:#5c7189}.node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}.node.selected rect{fill:#35483d}.node.b.selected rect{fill:#354357}.a{--accent:var(--mint)}.b{--accent:var(--blue)}.node text{pointer-events:none;fill:var(--ink);font-size:14px;font-weight:600}.node .code{fill:var(--accent);font:10px ui-monospace,monospace;letter-spacing:.05em}.node circle{fill:var(--accent)}.dim{opacity:.38}.tooltip{position:absolute;max-width:250px;z-index:2;pointer-events:none;background:#0f1c18;border:1px solid var(--line);padding:9px 11px;font-size:.82rem;box-shadow:0 9px 24px #0005}.detail{padding:22px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:13px;min-width:0}.detail h2{font:500 2rem/1 Georgia,serif;letter-spacing:-.035em}.detail p{color:var(--muted)}.meta{color:var(--accent);font: .73rem ui-monospace,monospace;letter-spacing:.05em}.links{display:grid;gap:7px;margin-top:3px}.links button{text-align:left}.footbar{padding:9px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;display:flex;justify-content:space-between;gap:10px}.build{margin:28px 0}.build h2{font:500 2rem Georgia,serif}.build ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:0;list-style:none;gap:9px}.build button{width:100%;height:100%;text-align:left;padding:11px}.build small{display:block;color:var(--mint)}footer{color:var(--muted);padding-bottom:24px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:760px){.layout{grid-template-columns:1fr}.viewport{height:440px}.detail{border-left:0;border-top:1px solid var(--line)}.spacer{display:none}.legend{width:100%}.footbar{flex-wrap:wrap}}
 .detail{min-height:0}.detail-copy{overflow:auto}.links{margin-top:auto;grid-template-rows:repeat(3,auto)}.links button{min-height:38px}.links .empty{visibility:hidden}.links .expands{border-style:dashed;color:var(--muted);background:transparent}.links .expands:hover{color:var(--ink);background:#20332e}.detail h2{margin-bottom:8px}@media(max-width:760px){.detail{min-height:340px}}
-.viewport.flight{cursor:default;background:radial-gradient(ellipse at 50% 64%,#24453c 0%,#142721 35%,#0e1817 75%)}.flight::before{content:"";position:absolute;inset:0;background:radial-gradient(#78989066 1px,transparent 1px) 0 0/39px 43px;mask-image:radial-gradient(ellipse,#000,transparent 90%);pointer-events:none}.flight #graph{position:relative}.flight .node:hover{filter:brightness(1.2)}.flight .edge{stroke-width:2}
+.viewport.flight{cursor:default}.flight #graph{position:relative}.flight .node:hover{filter:brightness(1.2)}.flight .edge{stroke-width:2}.flight .edge.incoming{color:var(--accent);stroke:url(#parent-fade);stroke-opacity:1}
 
 :root{color-scheme:light;--bg:#f6f9fa;--panel:#fff;--ink:#112a3e;--muted:#526876;--line:#bdcfda;--mint:#006eb1;--blue:#245a7a;font-family:Arial,sans-serif}
 nav{align-items:center}nav a{display:inline-flex;align-items:center;gap:9px;font-weight:700}nav img{object-fit:contain}nav span{color:var(--muted)}
 h1,.detail h2,.build h2{font-family:Arial,sans-serif;font-weight:700}h1{font-size:clamp(2.35rem,5.3vw,4.65rem);letter-spacing:-.055em}.detail h2{font-size:1.7rem;line-height:1.12}
 button,select{background:#f6f9fa;border-color:#b2c9d7}button:hover,button[aria-pressed=true],.links .expands:hover{background:#dceffc}
-.viewport{background:#e9f3f8 radial-gradient(#b5cdda 1px,transparent 1px) 0 0/20px 20px}.viewport.flight{background:repeating-radial-gradient(circle at 50% 60%,transparent 0 51px,#83b0ca24 52px 53px),radial-gradient(ellipse at 50% 60%,#d8f0ff,#f6f9fa 78%)}
-.flight::before{background:radial-gradient(#245a7a39 1px,transparent 1px) 0 0/39px 43px}
+.viewport{background:#e9f3f8 radial-gradient(#b5cdda 1px,transparent 1px) 0 0/20px 20px}
+.explorer,button,select,.tooltip{border-radius:0}
 .node rect{fill:#fff;stroke:#82b8d7}.node.b rect{fill:#eef4f8;stroke:#8ba8ba}.node.selected rect{fill:#d8f0ff}.node.b.selected rect{fill:#dae8f3}.node .code{font-weight:700}.tooltip{background:#fff;box-shadow:0 9px 24px #112a3e24}
 </style>
 </head>
@@ -35,7 +35,7 @@ button,select{background:#f6f9fa;border-color:#b2c9d7}button:hover,button[aria-p
 <div class="spacer"></div><div class="legend"><span><i class="dot"></i>Process a row</span><span><i class="dot blue"></i>Manage a dataset</span></div>
 </div>
 <div class="layout">
-<div class="viewport" id="viewport"><svg id="graph" aria-label="Binary architecture tree"><defs><linearGradient id="parent-fade" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-opacity="0"/><stop offset="1" stop-color="#006eb1" stop-opacity=".8"/></linearGradient></defs><g id="scene"></g></svg><div class="tooltip" id="tip" role="tooltip" hidden></div></div>
+<div class="viewport" id="viewport"><svg id="graph" aria-label="Binary architecture tree"><defs><linearGradient id="parent-fade" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse"><stop offset="0" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".8"/></linearGradient></defs><g id="scene"></g></svg><div class="tooltip" id="tip" role="tooltip" hidden></div></div>
 <aside class="detail a" id="detail"><div class="meta" id="meta"></div><div class="detail-copy" aria-live="polite"><h2 id="title"></h2><p id="explanation"></p></div><div class="links" id="links"></div></aside>
 </div>
 <div class="footbar"><span id="help">Drag to pan · Scroll to zoom · Select a node to read it</span><span id="status"></span></div>
@@ -192,15 +192,17 @@ function render(reset) {
       }
     }
   }
-  if (flight && (old.parent || selected.parent)) {
-    scene.append(svg("path",{id:"parent-tether",fill:"none",stroke:"url(#parent-fade)",
-      "stroke-width":"2.5","pointer-events":"none","aria-hidden":"true"}));
-  }
   const trail = new Set();
   for (let node = selected; node; node = nodes.get(node.parent)) trail.add(node.id);
   for (const {node,x:xx,y:yy} of positions.values()) {
     const parent = positions.get(node.parent);
-    if (!parent) continue;
+    const incoming = flight && node===selected && node.parent;
+    if (!parent && !incoming) continue;
+    if (flight) {
+      scene.append(svg("path",{class:`edge ${color(node)} ${incoming?"incoming":""} ${trail.has(node.id)?"active":""}`,
+        "data-edge":node.id}));
+      continue;
+    }
     const start = parent.x+W;
     const middle = (start+xx)/2;
     const midY = (parent.y + yy)/2;
@@ -216,7 +218,7 @@ function render(reset) {
     const group = svg("g",{class:`node ${color(node)} ${node===selected?"selected":""}`,
       role:"button",tabindex:"0","aria-label":node.title,"aria-pressed":String(node===selected),
       "data-node":node.id,transform:`translate(${xx} ${yy-H/2})`});
-    group.append(svg("rect",{width:W,height:H,rx:9}));
+    group.append(svg("rect",{width:W,height:H}));
     const code = svg("text",{x:12,y:20,class:"code"});
     code.textContent = node.id==="root" ? "OVERVIEW" : node.id;
     const label = svg("text",{x:12,y:43});
@@ -328,21 +330,18 @@ function paintFlight() {
   }
   for (const line of scene.querySelectorAll("[data-edge]")) {
     const node=nodes.get(line.dataset.edge);
-    const a=geometry.get(node.parent), b=geometry.get(node.id);
+    const incoming=line.classList.contains("incoming");
+    let a=geometry.get(node.parent);
+    if (!a) {
+      const parent=nodes.get(node.parent);
+      const from=project(parent,old), to=project(parent,selected);
+      a={x:blend(from.x,to.x),y:blend(from.y,to.y),size:blend(from.size,to.size),alpha:0};
+    }
+    const b=geometry.get(node.id);
     const start=a.y+H*a.size/2, end=b.y-H*b.size/2, mid=(start+end)/2;
     line.setAttribute("d",`M ${a.x} ${start} C ${a.x} ${mid}, ${b.x} ${mid}, ${b.x} ${end}`);
-    line.style.opacity=Math.min(a.alpha,b.alpha);
-  }
-  const tether=$("parent-tether");
-  if (tether) {
-    const a=geometry.get(old.id), b=geometry.get(selected.id);
-    const from=old.parent ? a : b;
-    const to=selected.parent ? b : a;
-    const endX=blend(from.x,to.x);
-    const endY=blend(from.y-H*from.size/2,to.y-H*to.size/2);
-    const startX=endX+(endX-graph.clientWidth/2)*.34+graph.clientWidth*.045;
-    tether.setAttribute("d",`M ${startX} 7 C ${startX} ${endY*.43}, ${endX} ${endY*.55}, ${endX} ${endY}`);
-    tether.style.opacity=blend(Number(Boolean(old.parent)),Number(Boolean(selected.parent)));
+    if (incoming) $("parent-fade").setAttribute("y2",Math.max(1,end));
+    line.style.opacity=Math.min(incoming ? 1 : a.alpha,b.alpha);
   }
   $("status").textContent=`Level ${selected.depth} of 4 · ${selected.title}`;
   $("out").disabled=!selected.parent;
