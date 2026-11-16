@@ -9,7 +9,7 @@
 <style>
 :root{color-scheme:dark;--bg:#111b19;--panel:#172623;--ink:#eef4e8;--muted:#aabdb4;--line:#355049;--mint:#a9e9b8;--blue:#a9bfef;font:15px/1.5 system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:1550px;margin:auto;padding-inline:clamp(16px,4vw,56px)}header{padding-block:25px 24px}nav{display:flex;justify-content:space-between;gap:12px;font-size:.85rem}h1,h2,h3,p{margin:0}h1{font:500 clamp(2.6rem,6vw,5.6rem)/1 Georgia,serif;letter-spacing:-.065em;margin:29px 0 12px}header p{color:var(--muted);font-size:1.05rem;max-width:55ch}.explorer{border:1px solid var(--line);border-radius:17px;overflow:hidden;background:var(--panel)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line)}button,label{font:inherit}button{color:inherit;cursor:pointer;background:#20332e;border:1px solid #425e55;border-radius:8px;padding:6px 11px}button:hover,button[aria-pressed=true]{background:#334e44}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:3px}button:disabled{opacity:.45;cursor:default}select{background:#20332e;color:inherit;border:1px solid #425e55;border-radius:8px;padding:7px}label{color:var(--muted);display:flex;align-items:center;gap:7px}.spacer{flex:1}.legend{display:flex;flex-wrap:wrap;gap:13px;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--mint)}.dot.blue{background:var(--blue)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px)}.viewport{height:clamp(500px,66vh,730px);position:relative;overflow:hidden;background:#12201c radial-gradient(#38534a 1px,transparent 1px) 0 0/20px 20px;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}svg#graph{display:block;width:100%;height:100%}.edge{fill:none;stroke:var(--accent);stroke-opacity:.31;stroke-width:1.6}.edge.active{stroke-opacity:1;stroke-width:2}.node{cursor:pointer;outline:none}.node rect{fill:#1d3029;stroke:#507061;stroke-width:1}.node.b rect{fill:#22303e;stroke:#5c7189}.node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}.node.selected rect{fill:#35483d}.node.b.selected rect{fill:#354357}.a{--accent:var(--mint)}.b{--accent:var(--blue)}.node text{pointer-events:none;fill:var(--ink);font-size:14px;font-weight:600}.node .code{fill:var(--accent);font:10px ui-monospace,monospace;letter-spacing:.05em}.node circle{fill:var(--accent)}.dim{opacity:.38}.tooltip{position:absolute;max-width:250px;z-index:2;pointer-events:none;background:#0f1c18;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:.82rem;box-shadow:0 9px 24px #0005}.detail{padding:22px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:13px;min-width:0}.detail h2{font:500 2rem/1 Georgia,serif;letter-spacing:-.035em}.detail p{color:var(--muted)}.meta{color:var(--accent);font: .73rem ui-monospace,monospace;letter-spacing:.05em}.links{display:grid;gap:7px;margin-top:3px}.links button{text-align:left}.footbar{padding:9px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;display:flex;justify-content:space-between;gap:10px}.build{margin:28px 0}.build h2{font:500 2rem Georgia,serif}.build ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:0;list-style:none;gap:9px}.build button{width:100%;height:100%;text-align:left;padding:11px}.build small{display:block;color:var(--mint)}footer{color:var(--muted);padding-bottom:24px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:760px){.layout{grid-template-columns:1fr}.viewport{height:440px}.detail{border-left:0;border-top:1px solid var(--line)}.spacer{display:none}.legend{width:100%}.footbar{flex-wrap:wrap}}
-.detail{min-height:0}.detail-copy{overflow:auto}.links{margin-top:auto;grid-template-rows:repeat(3,auto)}.links button{min-height:38px}.links .empty{visibility:hidden}.links .expands{border-style:dashed;color:var(--muted);background:transparent}.links .expands:hover{color:var(--ink);background:#20332e}.links small{display:block;color:var(--muted)}.links .expands{position:relative}.links .expands::after{content:" ↗"}.detail h2{margin-bottom:8px}dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:13px;padding:22px;max-width:min(380px,90vw)}dialog::backdrop{background:#07110ec2}dialog p{color:var(--muted);margin:10px 0 18px}dialog form{display:flex;justify-content:flex-end;gap:8px}@media(max-width:760px){.detail{min-height:340px}}
+.detail{min-height:0}.detail-copy{overflow:auto}.links{margin-top:auto;grid-template-rows:repeat(3,auto)}.links button{min-height:38px}.links .empty{visibility:hidden}.links .expands{border-style:dashed;color:var(--muted);background:transparent}.links .expands:hover{color:var(--ink);background:#20332e}.detail h2{margin-bottom:8px}@media(max-width:760px){.detail{min-height:340px}}
 .viewport.flight{cursor:default;background:radial-gradient(ellipse at 50% 64%,#24453c 0%,#142721 35%,#0e1817 75%)}.flight::before{content:"";position:absolute;inset:0;background:radial-gradient(#78989066 1px,transparent 1px) 0 0/39px 43px;mask-image:radial-gradient(ellipse,#000,transparent 90%);pointer-events:none}.flight #graph{position:relative}.flight .node:hover{filter:brightness(1.2)}.flight .edge{stroke-width:2}
 </style>
 </head>
@@ -33,10 +33,6 @@
 <div class="footbar"><span id="help">Drag to pan · Scroll to zoom · Select a node to read it</span><span id="status"></span></div>
 </section>
 <section class="build" aria-labelledby="build-title"><h2 id="build-title">Build it in this order</h2><ol id="build"></ol></section>
-<dialog id="expand" aria-labelledby="expand-title">
-<h2 id="expand-title">Expand to next level?</h2><p>The tree will show another level and fit the expanded view.</p>
-<form method="dialog"><button value="cancel" autofocus>Stay here</button><button value="expand">Expand tree</button></form>
-</dialog>
 <noscript>Enable JavaScript to explore the architecture tree.</noscript>
 </main>
 <footer>Python · Ollama · SQLite · FastAPI</footer>
@@ -252,8 +248,10 @@ function render(reset) {
   for (let slot=0; slot<3; slot++) {
     const node = targets[slot];
     const expands = !flight && node && node.depth > Number(depth.value);
-    const label = node ? (slot===0 ? "↑ "+node.title : node.title+(expands ? "" : " →")) : "Empty";
-    const control = button(label,()=>navigate(node,control));
+    const back = orientation === "horizontal" ? "←" : "↑";
+    const forward = orientation === "horizontal" ? "→" : "↓";
+    const label = node ? (slot===0 ? back+" "+node.title : node.title+" "+forward) : "Empty";
+    const control = button(label,()=>show(node));
     control.dataset.slot = slot;
     if (!node) {control.className = "empty"; control.disabled = true;}
     if (expands) {
@@ -279,21 +277,6 @@ $("focus").addEventListener("click",()=>{
   focusRoot = focusRoot ? null : selected;
   if (focusRoot && Number(depth.value)===selected.depth) depth.value=selected.depth+1;
   render(true);
-});
-const dialog = $("expand");
-let pending = null;
-function navigate(node, control) {
-  if (isFlight() || node.depth <= Number(depth.value)) {show(node); return;}
-  pending = {node, control};
-  dialog.returnValue = "";
-  dialog.showModal();
-}
-dialog.addEventListener("close",()=>{
-  if (!pending) return;
-  const {node, control} = pending;
-  pending = null;
-  if (dialog.returnValue === "expand") show(node);
-  else control.focus({preventScroll:true});
 });
 function flightVisible(node, anchor) {
   if (node.depth < anchor.depth || node.depth > anchor.depth+2) return false;
