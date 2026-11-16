@@ -95,7 +95,11 @@ const svg = (tag, attrs) => {
 };
 const nodes = new Map(tree.map(([id,parent,title,text]) => [id,{id,parent,title,text,children:[]}]));
 for (const node of nodes.values()) if (node.parent) nodes.get(node.parent).children.push(node);
-for (const node of nodes.values()) node.depth = node.parent ? nodes.get(node.parent).depth + 1 : 0;
+for (const node of nodes.values()) {
+  const parent=nodes.get(node.parent);
+  node.depth=parent ? parent.depth+1 : 0;
+  node.outline=parent ? `${parent.outline}.${parent.children.indexOf(node)+1}` : "1";
+}
 const graph = $("graph"), scene = $("scene"), view = $("viewport"), depth = $("depth");
 const W = 181, H = 59, DX = 224, DY = 74, FLIGHT_WIDTH = 248;
 const sentenceSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en",{granularity:"sentence"}) : null;
@@ -232,7 +236,7 @@ function render(reset) {
     const cardWidth = flight ? FLIGHT_WIDTH : W;
     group.append(svg("rect",{width:cardWidth,height:H}));
     const code = svg("text",{x:12,y:20,class:"code"});
-    code.textContent = node.id==="root" ? "OVERVIEW" : node.id;
+    code.textContent = node.outline;
     const label = svg("text",{x:12,y:43});
     label.textContent = node.title;
     group.append(code,label);
@@ -277,7 +281,7 @@ function render(reset) {
     }
   }
   $("detail").className = "detail "+color(selected);
-  $("meta").textContent = `LEVEL ${selected.depth} · ${selected.id==="root"?"OVERVIEW":selected.id}`;
+  $("meta").textContent = `LEVEL ${selected.depth} · ${selected.outline}`;
   $("title").textContent = selected.title;
   $("explanation").textContent = selected.text;
   $("focus").disabled = !focusRoot && (selected.id==="root" || !selected.children.length);
