@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive binary tree for building a local CSV research agent with Python, Ollama, and SQLite.">
+<title>Build a Local AI Agent | Interactive Architecture Tree</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%2313231f'/%3E%3Cpath d='M10 20h8m0-9v18m0-18h11m-11 18h11' stroke='%23a4e9be' fill='none' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;--bg:#111b19;--panel:#172623;--ink:#eef4e8;--muted:#aabdb4;--line:#355049;--mint:#a9e9b8;--blue:#a9bfef;font:15px/1.5 system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:1550px;margin:auto;padding-inline:clamp(16px,4vw,56px)}header{padding-block:25px 24px}nav{display:flex;justify-content:space-between;gap:12px;font-size:.85rem}h1,h2,h3,p{margin:0}h1{font:500 clamp(2.6rem,6vw,5.6rem)/1 Georgia,serif;letter-spacing:-.065em;margin:29px 0 12px}header p{color:var(--muted);font-size:1.05rem;max-width:55ch}.explorer{border:1px solid var(--line);border-radius:17px;overflow:hidden;background:var(--panel)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line)}button,label{font:inherit}button{color:inherit;cursor:pointer;background:#20332e;border:1px solid #425e55;border-radius:8px;padding:6px 11px}button:hover,button[aria-pressed=true]{background:#334e44}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:3px}button:disabled{opacity:.45;cursor:default}select{background:#20332e;color:inherit;border:1px solid #425e55;border-radius:8px;padding:7px}label{color:var(--muted);display:flex;align-items:center;gap:7px}.spacer{flex:1}.legend{display:flex;flex-wrap:wrap;gap:13px;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--mint)}.dot.blue{background:var(--blue)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px)}.viewport{height:clamp(500px,66vh,730px);position:relative;overflow:hidden;background:#12201c radial-gradient(#38534a 1px,transparent 1px) 0 0/20px 20px;cursor:grab;touch-action:none}.viewport.dragging{cursor:grabbing}svg#graph{display:block;width:100%;height:100%}.edge{fill:none;stroke:var(--accent);stroke-opacity:.31;stroke-width:1.6}.edge.active{stroke-opacity:1;stroke-width:2}.node{cursor:pointer;outline:none}.node rect{fill:#1d3029;stroke:#507061;stroke-width:1}.node.b rect{fill:#22303e;stroke:#5c7189}.node:hover rect,.node:focus-visible rect,.node.selected rect{stroke:var(--accent);stroke-width:2}.node.selected rect{fill:#35483d}.node.b.selected rect{fill:#354357}.a{--accent:var(--mint)}.b{--accent:var(--blue)}.node text{pointer-events:none;fill:var(--ink);font-size:14px;font-weight:600}.node .code{fill:var(--accent);font:10px ui-monospace,monospace;letter-spacing:.05em}.node circle{fill:var(--accent)}.dim{opacity:.38}.tooltip{position:absolute;max-width:250px;z-index:2;pointer-events:none;background:#0f1c18;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:.82rem;box-shadow:0 9px 24px #0005}.detail{padding:22px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:13px;min-width:0}.detail h2{font:500 2rem/1 Georgia,serif;letter-spacing:-.035em}.detail p{color:var(--muted)}.meta{color:var(--accent);font: .73rem ui-monospace,monospace;letter-spacing:.05em}.links{display:grid;gap:7px;margin-top:3px}.links button{text-align:left}.footbar{padding:9px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;display:flex;justify-content:space-between;gap:10px}.build{margin:28px 0}.build h2{font:500 2rem Georgia,serif}.build ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:0;list-style:none;gap:9px}.build button{width:100%;height:100%;text-align:left;padding:11px}.build small{display:block;color:var(--mint)}footer{color:var(--muted);padding-bottom:24px;font-size:.85rem}[hidden]{display:none!important}@media(max-width:760px){.layout{grid-template-columns:1fr}.viewport{height:440px}.detail{border-left:0;border-top:1px solid var(--line)}.spacer{display:none}.legend{width:100%}.footbar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+<nav><a href="../../">← Research portfolio</a><span>Local CSV Research</span></nav>
+<h1>Build a local AI agent.</h1>
+<p>Follow the binary tree from one idea to sixteen pieces you can build and test.</p>
+</header>
+<main>
+<section class="explorer" aria-label="Interactive architecture explorer">
+<div class="toolbar">
+<label>Depth <select id="depth"><option value="0">0 · Overview</option><option value="1">1 · Two branches</option><option value="2">2 · Four components</option><option value="3" selected>3 · Eight subsystems</option><option value="4">4 · Sixteen build steps</option></select></label>
+<button id="out" aria-label="Zoom out">−</button><button id="in" aria-label="Zoom in">+</button><button id="fit">Fit view</button><button id="focus" aria-pressed="false">Focus branch</button>
+<div class="spacer"></div><div class="legend"><span><i class="dot"></i>Process a row</span><span><i class="dot blue"></i>Manage a dataset</span></div>
+</div>
+<div class="layout">
+<div class="viewport" id="viewport"><svg id="graph" aria-label="Binary architecture tree"><g id="scene"></g></svg><div class="tooltip" id="tip" role="tooltip" hidden></div></div>
+<aside class="detail a" id="detail"><div class="meta" id="meta"></div><div aria-live="polite"><h2 id="title"></h2><p id="explanation"></p></div><div class="links" id="links"></div></aside>
+</div>
+<div class="footbar"><span>Drag to pan · Scroll to zoom · Select a node to read it</span><span id="status"></span></div>
+</section>
+<section class="build" aria-labelledby="build-title"><h2 id="build-title">Build it in this order</h2><ol id="build"></ol></section>
+<noscript>Enable JavaScript to explore the architecture tree.</noscript>
+</main>
+<footer>Python · Ollama · SQLite · FastAPI</footer>
+<script>
+"use strict";
+const tree = [
+["root","","Local AI research agent","Turn a dataset and a task into auditable results. Gather the permitted evidence, run the selected tools, validate each output, and save each row. The worker can continue after the browser closes."],
+["A","root","Process one row","Turn text, a document, or a web page into a typed decision with evidence. Design this as a function that accepts a row, a task, and a set of tools."],
+["B","root","Manage the dataset","Repeat row processing across a dataset, survive interruptions, and let people monitor, inspect, and export the results."],
+["A1","A","Assemble inputs","Freeze the task and turn selected CSV cells, documents, JSON values, or webpages into source records."],
+["A2","A","Compute and validate","Run a Python operation or ask local Ollama for structured output. Check the returned type, allowed values, and evidence."],
+["B1","B","Execute jobs durably","Store tasks and rows in SQLite. A background worker claims work, checkpoints results, and recovers interrupted rows."],
+["B2","B","Give users control","Build a job form and dashboard, then provide ways to review decisions, export results, and assess quality."],
+["A1a","A1","Freeze the task","Save the rubric, expected fields, model identity, and enabled capabilities when a job starts."],
+["A1b","A1","Collect evidence","Standardize how readers return evidence. Give each source an ID, provenance, and a bounded excerpt."],
+["A2a","A2","Choose computation","Run precise transformations in Python. Route language judgments through a local Ollama adapter."],
+["A2b","A2","Validate and flag","Check the schema and quoted evidence. Represent missing information and uncertainty explicitly."],
+["B1a","B1","Store and claim work","Link original input rows to versioned jobs and per-row work records. Claim work through a transaction."],
+["B1b","B1","Checkpoint and recover","Save each completed row and requeue interrupted work after restart."],
+["B2a","B2","Wire up the interface","Use a browser form to configure jobs and a polling dashboard to display saved progress and controls."],
+["B2b","B2","Inspect and measure","Export traceable results. Compare predictions with independently labeled examples."],
+["A1a.1","A1a","Define the contract","Start with one text column and one integer score from 1 to 5. Write one rule per score and specify what happens when a passage is blank or unclear. Try submitting a task with an invalid score range."],
+["A1a.2","A1a","Version settings","Hash the stored task JSON and record model tags, digests, and capability versions. Pin documents by content hash. Start a job, change the preset, and check the queued job still uses its original rubric."],
+["A1b.1","A1b","Standardize sources","Give a CSV passage the ID csv:1, a document doc:1, and a webpage web:1. Each record holds text and provenance such as a column name, file hash, or URL and retrieval date."],
+["A1b.2","A1b","Bound evidence","Limit the text budget. Flag truncation and optionally choose a contiguous keyword-matched excerpt with an offset. For websites, check access rules and limit same-site links. Verify that an excerpt can be located in its source."],
+["A2a.1","A2a","Write Python tools","Build one deterministic operation, such as extracting a domain from a URL. Test input-output pairs, then register it as a capability so it can run without Ollama."],
+["A2a.2","A2a","Connect Ollama","Send sources, a rubric, and a JSON schema to the local model with bounded threads, context, and timeouts. Test against a fake adapter before using real inference. Add a second model after the first works."],
+["A2b.1","A2b","Check schema and quotes","Require a value, status, quote, source ID, and explanation. Reject a string where an integer is required, an out-of-range score, and a quote absent from the claimed source. A matching quote still needs to support the decision."],
+["A2b.2","A2b","Handle uncertainty","Keep blank passages missing. A nonempty passage can earn a 1 if the rubric defines it that way. When models disagree, retain their answers and flag the field for review."],
+["B1a.1","B1a","Design SQLite tables","Store original inputs, frozen jobs, and results separately. This lets multiple jobs score the same dataset while preserving its original rows."],
+["B1a.2","B1a","Claim work atomically","Select a pending row and mark it working in one transaction. Commit before inference. Use a unique job-and-row key and an operating-system lock to prevent two workers from processing the queue together."],
+["B1b.1","B1b","Commit each result","Save the output, evidence, model identity, elapsed time, attempt count, and status together. Allow a limited retry for malformed output and send unresolved rows to review."],
+["B1b.2","B1b","Recover unfinished rows","On restart, acquire the worker lock and requeue interrupted working rows. An inference may repeat if it completed just before a crash. Test that already committed rows retain their original attempt counts."],
+["B2a.1","B2a","Build the task form","Start with CSV upload, a text column, a rubric, a model selector, and a five-row sample. Then populate the capabilities panel from the registry and reveal settings such as document filename only when needed."],
+["B2a.2","B2a","Build the dashboard","Poll FastAPI for counts, errors, and permitted actions such as pause or resume. Close the browser during a job and reopen it to verify the worker continued."],
+["B2b.1","B2b","Export with provenance","Export the original columns, generated values, and audit fields. Offer a review-only export. Trace one sample score back to the frozen task, model, and evidence."],
+["B2b.2","B2b","Evaluate against labels","Compare local models on the same labeled examples. Report exact agreement, within-one agreement, quadratic weighted kappa, and coverage. If a model answers 20 of 100 rows correctly on all 20, it has 100% agreement on scored rows and 20% coverage."]
+];
+const $ = id => document.getElementById(id);
+const svg = (tag, attrs) => {
+  const item = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [key,value] of Object.entries(attrs)) item.setAttribute(key,value);
+  return item;
+};
+const nodes = new Map(tree.map(([id,parent,title,text]) => [id,{id,parent,title,text,children:[]}]));
+for (const node of nodes.values()) if (node.parent) nodes.get(node.parent).children.push(node);
+for (const node of nodes.values()) node.depth = node.parent ? nodes.get(node.parent).depth + 1 : 0;
+const graph = $("graph"), scene = $("scene"), view = $("viewport"), depth = $("depth");
+const W = 181, H = 59, DX = 224, DY = 74;
+let selected = nodes.get(location.hash.slice(1)) || nodes.get("root");
+let focused = false, positions = new Map(), width, height, x = 0, y = 0, scale = 1, baseScale = 1;
+let pointers = new Map(), moved = false;
+const color = node => node.id.startsWith("B") ? "b" : "a";
+const closestNode = event => event.target.closest(".node");
+function paint() {
+  scene.setAttribute("transform", `translate(${x} ${y}) scale(${scale})`);
+  $("status").textContent = `${positions.size} nodes · ${Math.round(100*scale/baseScale)}% zoom`;
+}
+function fit() {
+  scale = Math.min((graph.clientWidth-30)/width,(graph.clientHeight-30)/height,1.3);
+  baseScale = scale;
+  x = (graph.clientWidth-width*scale)/2;
+  y = (graph.clientHeight-height*scale)/2;
+  paint();
+}
+function zoom(factor, px=graph.clientWidth/2, py=graph.clientHeight/2) {
+  const target = Math.max(baseScale*.65,Math.min(scale*factor,Math.max(2.8,baseScale*3)));
+  x = px-(px-x)*target/scale;
+  y = py-(py-y)*target/scale;
+  scale = target;
+  paint();
+}
+function button(text, action) {
+  const item = document.createElement("button");
+  item.textContent = text;
+  item.addEventListener("click",action);
+  return item;
+}
+function show(node, center=false) {
+  const reset = node.depth > Number(depth.value) || (focused && node !== selected);
+  if (node.depth > Number(depth.value)) depth.value = node.depth;
+  selected = node;
+  if (location.hash !== "#" + node.id) history.replaceState(null,"","#"+node.id);
+  render(reset);
+  if (center && !reset) {
+    const p = positions.get(node.id);
+    x = graph.clientWidth/2 - (p.x+W/2)*scale;
+    y = graph.clientHeight/2 - p.y*scale;
+    paint();
+  }
+}
+function render(reset) {
+  $("tip").hidden = true;
+  scene.replaceChildren();
+  positions = new Map();
+  const root = focused ? selected : nodes.get("root");
+  let row = 0, columns = 1;
+  function layout(node, level) {
+    columns = Math.max(columns,level+1);
+    const children = node.depth < Number(depth.value) ? node.children.map(child => layout(child,level+1)) : [];
+    const yy = children.length ? (children[0].y+children.at(-1).y)/2 : H/2+row++*DY;
+    const position = {node,x:level*DX,y:yy};
+    positions.set(node.id,position);
+    return position;
+  }
+  layout(root,0);
+  width = (columns-1)*DX+W;
+  height = (row-1)*DY+H;
+  const trail = new Set();
+  for (let node = selected; node; node = nodes.get(node.parent)) trail.add(node.id);
+  for (const {node,x:xx,y:yy} of positions.values()) {
+    const parent = positions.get(node.parent);
+    if (!parent) continue;
+    const start = parent.x+W;
+    const middle = (start+xx)/2;
+    scene.append(svg("path",{class:`edge ${color(node)} ${trail.has(node.id)?"active":""}`,
+      d:`M ${start} ${parent.y} C ${middle} ${parent.y}, ${middle} ${yy}, ${xx} ${yy}`}));
+  }
+  const visible = [...positions.values()].sort((a,b)=>a.x-b.x||a.y-b.y);
+  for (const {node,x:xx,y:yy} of visible) {
+    const group = svg("g",{class:`node ${color(node)} ${node===selected?"selected":""}`,
+      role:"button",tabindex:"0","aria-label":node.title,"aria-pressed":String(node===selected),
+      "data-node":node.id,transform:`translate(${xx} ${yy-H/2})`});
+    group.append(svg("rect",{width:W,height:H,rx:9}));
+    const code = svg("text",{x:12,y:20,class:"code"});
+    code.textContent = node.id==="root" ? "OVERVIEW" : node.id;
+    const label = svg("text",{x:12,y:43});
+    label.textContent = node.title;
+    group.append(code,label,svg("circle",{cx:W-12,cy:16,r:3}));
+    group.addEventListener("click",()=>{if(!moved)show(node);});
+    group.addEventListener("keydown",event=>{
+      if (["Enter"," "].includes(event.key)) {
+        event.preventDefault();
+        show(node);
+        scene.querySelector(".selected")?.focus();
+      }
+    });
+    group.addEventListener("pointerenter",()=> {
+      if (pointers.size) return;
+      const bounds = group.getBoundingClientRect(), local = view.getBoundingClientRect();
+      const tip = $("tip");
+      tip.textContent = node.text.split(/\. /)[0] + (node.text.includes(". ") ? "." : "");
+      tip.hidden = false;
+      tip.style.left = Math.max(5,Math.min(bounds.left-local.left,view.clientWidth-tip.offsetWidth-5))+"px";
+      tip.style.top = Math.max(5,Math.min(bounds.bottom-local.top+7,view.clientHeight-tip.offsetHeight-5))+"px";
+    });
+    group.addEventListener("pointerleave",()=>{$("tip").hidden=true;});
+    scene.append(group);
+    if (label.getComputedTextLength() > W-20) {
+      label.setAttribute("textLength", W-20);
+      label.setAttribute("lengthAdjust", "spacingAndGlyphs");
+    }
+  }
+  $("detail").className = "detail "+color(selected);
+  $("meta").textContent = `LEVEL ${selected.depth} · ${selected.id==="root"?"OVERVIEW":selected.id}`;
+  $("title").textContent = selected.title;
+  $("explanation").textContent = selected.text;
+  $("focus").disabled = !focused && (selected.id==="root" || !selected.children.length);
+  $("focus").setAttribute("aria-pressed",String(focused));
+  const links = $("links");
+  links.replaceChildren();
+  if (selected.parent) {
+    const parent = nodes.get(selected.parent);
+    links.append(button("↑ "+parent.title,()=>show(parent,true)));
+  }
+  for (const child of selected.children) links.append(button(child.title+" →",()=>show(child,true)));
+  if (reset) fit(); else paint();
+}
+depth.addEventListener("change",()=>{
+  while (selected.depth>Number(depth.value)) selected=nodes.get(selected.parent);
+  if (!selected.parent) focused=false;
+  show(selected);
+  fit();
+});
+$("focus").addEventListener("click",()=>{
+  focused=!focused;
+  if (focused && Number(depth.value)===selected.depth) depth.value=selected.depth+1;
+  render(true);
+});
+$("in").addEventListener("click",()=>zoom(1.25));
+$("out").addEventListener("click",()=>zoom(.8));
+$("fit").addEventListener("click",fit);
+graph.addEventListener("wheel",event=>{
+  event.preventDefault(); $("tip").hidden=true;
+  const bounds=graph.getBoundingClientRect();
+  zoom(Math.exp(-Math.sign(event.deltaY)*.13),event.clientX-bounds.left,event.clientY-bounds.top);
+},{passive:false});
+graph.addEventListener("pointerdown",event=>{
+  if (event.button!==0) return;
+  if (!pointers.size) moved=false;
+  pointers.set(event.pointerId,[event.clientX,event.clientY]);
+  if (!closestNode(event)) graph.setPointerCapture(event.pointerId);
+  $("tip").hidden=true;
+});
+graph.addEventListener("pointermove",event=>{
+  const old=pointers.get(event.pointerId);
+  if (!old) return;
+  const current=[event.clientX,event.clientY];
+  const dx=current[0]-old[0],dy=current[1]-old[1];
+  if (!moved && Math.hypot(dx,dy)<4) return;
+  moved=true;
+  if (!graph.hasPointerCapture(event.pointerId)) graph.setPointerCapture(event.pointerId);
+  view.classList.add("dragging");
+  const other=[...pointers].find(([id])=>id!==event.pointerId)?.[1];
+  if (other) {
+    const bounds=graph.getBoundingClientRect();
+    const distance = Math.hypot(...old.map((value,i)=>value-other[i]));
+    const next = Math.hypot(...current.map((value,i)=>value-other[i]));
+    if(distance>0 && next>0) zoom(next/distance,(old[0]+other[0])/2-bounds.left,(old[1]+other[1])/2-bounds.top);
+  }
+  x+=other?dx/2:dx; y+=other?dy/2:dy;
+  pointers.set(event.pointerId,current);
+  paint();
+});
+for (const name of ["pointerup","pointercancel","lostpointercapture"]) graph.addEventListener(name,event=>{
+  pointers.delete(event.pointerId);
+  if(!pointers.size) view.classList.remove("dragging");
+});
+window.addEventListener("pointerup",event=>pointers.delete(event.pointerId));
+window.addEventListener("hashchange",()=>show(nodes.get(location.hash.slice(1))||nodes.get("root"),true));
+const steps = [
+ ["A2a.2","Score one passage","Validate a score and quote."],
+ ["B1b.2","Add SQLite checkpoints","Resume a ten-row job."],
+ ["B2a.1","Build the browser UI","Configure and run a job."],
+ ["A1b.1","Add local document input","Cite the file named in a row."],
+ ["B2b.2","Evaluate model output","Compare agreement and coverage."]
+];
+steps.forEach(([id,title,description],index)=>{
+  const item=document.createElement("li");
+  const control=button(title,()=>{
+    show(nodes.get(id),true);
+    document.querySelector(".explorer").scrollIntoView({block:"start"});
+  });
+  const small=document.createElement("small");
+  small.textContent=`${index+1}. ${description}`;
+  control.append(small); item.append(control); $("build").append(item);
+});
+if (selected.depth>Number(depth.value)) depth.value=selected.depth;
+render(true);
+new ResizeObserver(fit).observe(graph);
+</script>
+</body>
+</html>
